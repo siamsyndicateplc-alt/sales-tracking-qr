@@ -31,13 +31,14 @@ router.post('/', async (req, res) => {
     const customer_name = sanitizeString(req.body.customer_name);
     const project_name = sanitizeString(req.body.project_name);
     
-    // metadata is a JSON object or string, if it's an object we can leave it or stringify & sanitize
+    // metadata: store as JSON string without sanitizing (sanitizeString strips { } " : which destroys JSON)
     let metadata = req.body.metadata;
     if (metadata) {
         if (typeof metadata === 'object') {
             metadata = JSON.stringify(metadata);
+        } else if (typeof metadata !== 'string') {
+            metadata = null;
         }
-        metadata = sanitizeString(metadata);
     }
 
     const VALID_EVENTS = ['scanned', 'survey_submitted', 'ms_forms_opened', 'skipped_ms_forms'];

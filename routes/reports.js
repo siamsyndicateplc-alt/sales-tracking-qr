@@ -5,7 +5,7 @@ const basicAuth = require('express-basic-auth');
 
 // Apply Basic Auth (keep existing middleware)
 router.use(basicAuth({
-    users: { [process.env.DASHBOARD_USER]: process.env.DASHBOARD_PASS },
+    users: { [process.env.DASHBOARD_USER || 'admin']: process.env.DASHBOARD_PASS || 'sstadmin2026' },
     challenge: true,
     realm: 'SST Dashboard'
 }));

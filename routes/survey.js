@@ -9,6 +9,12 @@ const sanitizeString = (str) => {
     return str.replace(/<[^>]*>/g, '').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s\-_./()]/g, '').trim().substring(0, 100);
 };
 
+// \u0E2A\u0E33\u0E2B\u0E23\u0E31\u0E1A field \u0E17\u0E35\u0E48\u0E23\u0E31\u0E1A\u0E02\u0E49\u0E2D\u0E04\u0E27\u0E32\u0E21\u0E22\u0E32\u0E27 \u0E40\u0E0A\u0E48\u0E19 \u0E04\u0E27\u0E32\u0E21\u0E04\u0E34\u0E14\u0E40\u0E2B\u0E47\u0E19 \u0E41\u0E25\u0E30\u0E15\u0E31\u0E27\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E1B\u0E23\u0E31\u0E1A\u0E1B\u0E23\u0E38\u0E07
+const sanitizeLongString = (str) => {
+    if (typeof str !== 'string') return '';
+    return str.replace(/<[^>]*>/g, '').trim().substring(0, 1000);
+};
+
 const sanitizeEmail = (str) => {
     if (typeof str !== 'string') return '';
     return str.replace(/<[^>]*>/g, '').replace(/[^\w.@+-]/g, '').trim().substring(0, 100);
@@ -82,8 +88,8 @@ router.post('/', async (req, res) => {
     const score_q2 = parseInt(req.body.score_q2, 10);
     const score_q3 = parseInt(req.body.score_q3, 10);
     const score_q4 = parseInt(req.body.score_q4, 10);
-    const improvements = sanitizeString(req.body.improvements);
-    const improvements_other = sanitizeString(req.body.improvements_other);
+    const improvements = sanitizeLongString(req.body.improvements);
+    const improvements_other = sanitizeLongString(req.body.improvements_other);
     const contact_name = sanitizeString(req.body.contact_name);
     const contact_phone = sanitizeString(req.body.contact_phone);
     const contact_email = sanitizeEmail(req.body.contact_email);
