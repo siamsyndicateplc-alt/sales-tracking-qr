@@ -112,28 +112,28 @@ async function requestEmailOtp(email) {
     if (!supabaseClient) return;
 
     const btn = document.getElementById('btn-send-email-otp');
-    const origText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'กำลังส่ง OTP...';
 
     const cleanEmail = email.trim();
-    
+
     // ตรวจสอบรูปแบบอีเมล (Email Regex Validation)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(cleanEmail)) {
         showAuthToast('กรุณากรอกอีเมลให้ถูกต้อง (เช่น name@example.com)', 'error');
         btn.disabled = false;
-        btn.textContent = origText;
+        btn.textContent = 'ขอรหัส OTP ทางอีเมล';
         return;
     }
 
-    let success = false;
+    // เริ่ม cooldown ทันทีที่กดปุ่ม ป้องกันกด spam ก่อน API ตอบกลับ
+    startEmailCooldown(60);
 
     try {
         const { error } = await supabaseClient.auth.signInWithOtp({
             email: cleanEmail,
             options: {
-                shouldCreateUser: true // อนุญาตให้สมัครใช้งานด้วยเมลทั่วไปได้ทันที
+                shouldCreateUser: true
             }
         });
 
@@ -143,18 +143,17 @@ async function requestEmailOtp(email) {
         document.getElementById('email-request-section').style.display = 'none';
         document.getElementById('email-verify-section').style.display = 'block';
         document.getElementById('email-verify-target').textContent = cleanEmail;
-        
+
         showAuthToast('ส่งรหัส OTP ไปยังอีเมลเรียบร้อยแล้ว! กรุณาตรวจสอบกล่องจดหมาย');
-        success = true;
-        startEmailCooldown(60);
     } catch (err) {
         console.error('Email OTP request failed:', err);
-        showAuthToast('ขอรหัส OTP ล้มเหลว กรุณาตรวจสอบความถูกต้องของอีเมล', 'error');
-    } finally {
-        if (!success) {
-            btn.disabled = false;
-            btn.textContent = origText;
-        }
+        const isRateLimit = err.message && err.message.toLowerCase().includes('rate');
+        showAuthToast(
+            isRateLimit
+                ? 'ส่ง OTP ถี่เกินไป กรุณารอสักครู่แล้วลองใหม่'
+                : 'ขอรหัส OTP ล้มเหลว กรุณาตรวจสอบความถูกต้องของอีเมล',
+            'error'
+        );
     }
 }
 
