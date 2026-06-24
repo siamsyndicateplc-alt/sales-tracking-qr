@@ -374,11 +374,10 @@
           <div class="dept-chips-container">
             <div class="dept-chips" id="deptChipsList">
               <button type="button" class="dept-chip active" data-dept="all">ทั้งหมด</button>
-              <button type="button" class="dept-chip" data-dept="WT">WT บำบัดน้ำ</button>
-              <button type="button" class="dept-chip" data-dept="MM">MM เครื่องกล</button>
-              <button type="button" class="dept-chip" data-dept="EE">EE ระบบไฟ</button>
-              <button type="button" class="dept-chip" data-dept="EF">EF ล่อฟ้า</button>
-              <button type="button" class="dept-chip" data-dept="NC">NC ดับเพลิง</button>
+              <button type="button" class="dept-chip" data-dept="EESV">EE-SV</button>
+              <button type="button" class="dept-chip" data-dept="ES">ES</button>
+              <button type="button" class="dept-chip" data-dept="EFSV">EF-SV</button>
+              <button type="button" class="dept-chip" data-dept="WT">WT</button>
             </div>
           </div>
         </div>
@@ -518,6 +517,32 @@
 
     <!-- Reusable Black Toast Message Box -->
     <div id="toast" class="toast-container">ข้อความแจ้งเตือน</div>
+
+    <!-- Confirm QR Modal -->
+    <div id="confirm-qr-modal" class="modal-overlay" hidden>
+        <div class="modal-card">
+            <h3 class="modal-title">ยืนยันก่อนสร้าง QR Code</h3>
+            <p class="modal-desc" style="margin-bottom: 14px; font-size: 13px; color: var(--text-secondary);">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนสร้าง</p>
+            <div style="background: #F9FAFB; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; border: 1px solid #E5E7EB;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <span style="font-size: 13px; color: var(--text-secondary); min-width: 70px;">ช่าง</span>
+                    <span id="confirm-emp-name" style="font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: right; flex: 1;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; padding-top: 10px; border-top: 1px solid #E5E7EB;">
+                    <span style="font-size: 13px; color: var(--text-secondary); min-width: 70px;">JOB Number</span>
+                    <span id="confirm-job-number" style="font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: right; flex: 1; word-break: break-all;"></span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 10px; border-top: 1px solid #E5E7EB;">
+                    <span style="font-size: 13px; color: var(--text-secondary); min-width: 70px;">ลูกค้า</span>
+                    <span id="confirm-customer" style="font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: right; flex: 1;"></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="confirm-qr-cancel" class="btn-cancel">กลับ</button>
+                <button type="button" id="confirm-qr-ok" class="btn-ok" style="background: var(--primary);">สร้าง QR Code</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Custom Prompt Modal -->
     <div id="custom-prompt-modal" class="modal-overlay" hidden>

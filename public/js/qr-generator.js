@@ -72,36 +72,8 @@ function setupAutoFill() {
     if (!empIdInput) return;
 
     let allEmployeeJobs = [];
+    let currentEmployeeDept = '';
     let activeDept = 'all';
-
-    function getDepartmentCode(jobNo) {
-        if (!jobNo) return 'อื่นๆ';
-        const upper = jobNo.toUpperCase();
-        
-        // Match JOB-[Dept][Brand]-[Year]-[Seq] format
-        if (upper.startsWith('JOB-')) {
-            const dept = upper.substring(4, 6);
-            if (['WT', 'MM', 'EE', 'EF', 'NC'].includes(dept)) {
-                return dept;
-            }
-        }
-        
-        // Match old SNWT-, SNMM-, etc. format
-        if (upper.startsWith('SNWT') || upper.startsWith('SN-EV')) return 'WT';
-        if (upper.startsWith('SNMM')) return 'MM';
-        if (upper.startsWith('SNEE')) return 'EE';
-        if (upper.startsWith('SNEF')) return 'EF';
-        if (upper.startsWith('SNNC')) return 'NC';
-        
-        // Fallback extraction
-        if (upper.startsWith('SN')) {
-            const dept = upper.substring(2, 4);
-            if (['WT', 'MM', 'EE', 'EF', 'NC'].includes(dept)) {
-                return dept;
-            }
-        }
-        return 'อื่นๆ';
-    }
 
     // Populate the unified job select dropdown
     function populateJobSelect() {
@@ -114,7 +86,7 @@ function setupAutoFill() {
         const filteredJobs = allEmployeeJobs.filter(job => {
             if (job.isCompleted) return false; // Hide completed jobs
             if (activeDept === 'all') return true;
-            return getDepartmentCode(job.jobNumber) === activeDept;
+            return currentEmployeeDept === activeDept;
         });
         
         filteredJobs.forEach(job => {
@@ -196,6 +168,7 @@ function setupAutoFill() {
         if (customerInfo) customerInfo.hidden = true;
         selectedCustomer = '';
         allEmployeeJobs = [];
+        currentEmployeeDept = '';
         activeDept = 'all';
         
         if (jobInput) {
@@ -222,6 +195,7 @@ function setupAutoFill() {
             empNameInput.readOnly = true;
 
             allEmployeeJobs = employee.jobs || [];
+            currentEmployeeDept = employee.dept || '';
             
             populateJobSelect();
             
@@ -341,7 +315,7 @@ function setupAutoFill() {
             if (job.isCompleted) return false;
 
             // Department filter
-            const matchDept = (activeDept === 'all') || (getDepartmentCode(job.jobNumber) === activeDept);
+            const matchDept = (activeDept === 'all') || (currentEmployeeDept === activeDept);
             if (!matchDept) return false;
 
             // Search query filter
@@ -472,6 +446,35 @@ function setupAutoFill() {
     }
 }
 
+function showConfirmModal(data) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-qr-modal');
+        if (!modal) { resolve(true); return; }
+
+        document.getElementById('confirm-emp-name').textContent = `${data.empId} — ${data.empName}`;
+        document.getElementById('confirm-job-number').textContent = data.projectName;
+        document.getElementById('confirm-customer').textContent = data.customerName;
+
+        modal.hidden = false;
+
+        const btnOk = document.getElementById('confirm-qr-ok');
+        const btnCancel = document.getElementById('confirm-qr-cancel');
+
+        const cleanup = (result) => {
+            modal.hidden = true;
+            btnOk.removeEventListener('click', onOk);
+            btnCancel.removeEventListener('click', onCancel);
+            resolve(result);
+        };
+
+        const onOk = () => cleanup(true);
+        const onCancel = () => cleanup(false);
+
+        btnOk.addEventListener('click', onOk);
+        btnCancel.addEventListener('click', onCancel);
+    });
+}
+
 function showCustomPrompt() {
     return new Promise((resolve) => {
         const modal = document.getElementById('custom-prompt-modal');
@@ -542,6 +545,9 @@ function setupFormSubmit() {
             }
             data.customerName = manual.trim();
         }
+
+        const confirmed = await showConfirmModal(data);
+        if (!confirmed) return;
 
         await createAndDisplayQR(data);
         

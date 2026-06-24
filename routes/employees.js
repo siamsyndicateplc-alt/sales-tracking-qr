@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
         // Fetch all flat data
         const { data, error } = await supabase
             .from('employee_master_data')
-            .select('emp_id, emp_name, job_number, customer_name');
+            .select('emp_id, emp_name, job_number, customer_name, department');
 
         if (error) throw error;
 
@@ -32,6 +32,7 @@ router.get('/', async (req, res) => {
             if (!result[row.emp_id]) {
                 result[row.emp_id] = {
                     name: row.emp_name,
+                    dept: row.department || '',
                     jobs: []
                 };
             }
