@@ -5,7 +5,7 @@ const { randomUUID } = require('crypto');
 
 const sanitizeString = (str) => {
     if (typeof str !== 'string') return '';
-    return str.replace(/<[^>]*>/g, '').replace(/[^\u0E00-\u0E7Fa-zA-Z0-9\s\-_./()]/g, '').trim().substring(0, 100);
+    return str.replace(/<[^>]*>/g, '').replace(/[^\p{L}\p{N}\p{M}\s\-_./()]/gu, '').trim().substring(0, 100);
 };
 
 /**
