@@ -32,6 +32,7 @@ const EMPLOYEES = [
     { name: 'ปิยวัฒน์ ทีเจริญ',         id: 'SST00488', dept: 'EESV' },
     { name: 'ทวีศักดิ์ เกษแก้ว',        id: 'SST00893', dept: 'EESV' },
     // ES
+    { name: 'เอกสิทธิ์ พึ่งอ้อ',         id: 'SST00916', dept: 'ES' },
     { name: 'ศักดิ์ชัย ศรีสุวรรณ',      id: 'SST00314', dept: 'ES' },
     { name: 'วรพันธุ์ มั่งคำ',           id: 'SST00429', dept: 'ES' },
     { name: 'มานะ นราภัย',              id: 'SST00697', dept: 'ES' },
@@ -240,14 +241,14 @@ async function main() {
         [...notFound].forEach(n => console.warn(`   - "${n}"`));
     }
 
-    console.log(`\n📝 จะ upsert ${toUpsert.length} records เข้า Supabase...`);
+    console.log(`\n📝 จะเพิ่ม/อัพเดต ${toUpsert.length} records เข้า Supabase...`);
 
     if (toUpsert.length === 0) {
         console.log('ไม่มีข้อมูลที่จะ import');
         return;
     }
 
-    // upsert เป็น batch
+    // upsert เป็น batch (เพิ่มของใหม่ / อัพเดตถ้ามีอยู่แล้ว)
     const BATCH = 50;
     let inserted = 0;
     for (let i = 0; i < toUpsert.length; i += BATCH) {
