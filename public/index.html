@@ -33,6 +33,24 @@
             70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
             100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
+        .year-pick-btn {
+            padding: 10px 8px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-card);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+        .year-pick-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .year-pick-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
         .status-pulse-gray {
             animation: pulse-gray 1.8s infinite;
         }
@@ -272,7 +290,7 @@
     <div id="login-container" class="login-wrap" style="display: none;">
         <div class="login-card">
             <img src="/img/company_logo.png" alt="SST" class="login-logo">
-            <h2 class="login-title">ระบบสร้าง QR Code ประเมิน</h2>
+            <h2 class="login-title">ระบบประเมินความพึงพอใจลูกค้า</h2>
             <p class="login-subtitle">สยามซินดิเคทเทคโนโลยี จำกัด (มหาชน)</p>
             <!-- วิธีที่ 1: เข้าสู่ระบบด้วย Email OTP -->
             <div id="form-email-otp" style="display: block;">
@@ -369,21 +387,17 @@
       <div class="form-group" style="position: relative;">
         <label for="jobNumberInput">JOB-Number<span class="required">*</span></label>
         
-        <!-- Department Filter Segmented Control (Redesigned for 100% Mobile Visibility & Formal look) -->
-        <div id="deptFilterContainer" class="dept-chips-scroll-wrapper" style="display: none;">
-          <div class="dept-chips-container">
-            <div class="dept-chips" id="deptChipsList">
-              <button type="button" class="dept-chip active" data-dept="all">ทั้งหมด</button>
-              <button type="button" class="dept-chip" data-dept="EESV">EE-SV</button>
-              <button type="button" class="dept-chip" data-dept="ES">ES</button>
-              <button type="button" class="dept-chip" data-dept="EFSV">EF-SV</button>
-              <button type="button" class="dept-chip" data-dept="WT">WT</button>
-            </div>
-          </div>
+        <!-- Year Filter Trigger -->
+        <div id="yearFilterContainer" style="display: none; margin-bottom: 8px;">
+          <button type="button" id="yearTrigger" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-card); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); font-family: inherit; transition: all 0.2s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="yearTriggerText">ทุกปี</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
         </div>
 
         <!-- Unified Job Selector Dropdown wrapper with Trigger Button and hidden select -->
-        <div id="jobSelectWrapper" style="display: none; margin-bottom: 12px; margin-top: 4px;">
+        <div id="jobSelectWrapper" style="display: none; margin-bottom: 8px; margin-top: 4px;">
           <select id="jobSelect" style="display: none;">
             <option value="">-- เลือก JOB-Number / โครงการ --</option>
           </select>
@@ -393,6 +407,11 @@
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </button>
+        </div>
+
+        <!-- Job Search -->
+        <div id="jobSearchContainer" style="display: none; margin-bottom: 8px;">
+          <input type="text" id="jobSearchInput" class="form-input" placeholder="ค้นหา JOB หรือชื่อลูกค้า..." autocomplete="off">
         </div>
 
         <input type="text" id="jobNumberInput" class="form-input" autocomplete="off" placeholder="พิมพ์เลข JOB..." style="display: none;">
@@ -557,6 +576,23 @@
         </div>
     </div>
     
+    <!-- Year Picker Modal -->
+    <div id="yearPickerModal" class="modal-overlay" hidden>
+        <div class="modal-card" style="max-width: 320px;">
+            <h3 class="modal-title" style="margin-bottom: 16px;">เลือกปี</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <button type="button" class="year-pick-btn active" data-year="all" style="grid-column: span 3;">ทุกปี</button>
+                <button type="button" class="year-pick-btn" data-year="2026">2026</button>
+                <button type="button" class="year-pick-btn" data-year="2025">2025</button>
+                <button type="button" class="year-pick-btn" data-year="2024">2024</button>
+                <button type="button" class="year-pick-btn" data-year="2023">2023</button>
+                <button type="button" class="year-pick-btn" data-year="2022">2022</button>
+                <button type="button" class="year-pick-btn" data-year="2021">2021</button>
+                <button type="button" class="year-pick-btn" data-year="2020">2020</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🔍 หน้าต่างโมดอลค้นหาและเลือก JOB (Job Search Modal) -->
     <div id="jobSearchModal" class="search-modal-backdrop" hidden>
       <div class="search-modal-content">

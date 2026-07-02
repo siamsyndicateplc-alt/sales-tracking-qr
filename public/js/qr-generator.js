@@ -17,24 +17,37 @@ async function loadEmployeeData() {
         }
         employeeData = await res.json();
         
-        // Merge with custom saved employees from LocalStorage safely
+        // Merge custom jobs from LocalStorage for existing server employees only
         const saved = JSON.parse(localStorage.getItem('customEmployees') || '{}');
         for (const [empId, localEmp] of Object.entries(saved)) {
-            if (!employeeData[empId]) {
-                employeeData[empId] = localEmp;
-            } else {
-                if (localEmp.jobs) {
-                    localEmp.jobs.forEach(localJob => {
-                        const existsInServer = employeeData[empId].jobs.find(j => j.jobNumber === localJob.jobNumber);
-                        if (!existsInServer) {
-                            employeeData[empId].jobs.push(localJob);
-                        }
-                    });
-                }
+            if (employeeData[empId] && localEmp.jobs) {
+                localEmp.jobs.forEach(localJob => {
+                    const existsInServer = employeeData[empId].jobs.find(j => j.jobNumber === localJob.jobNumber);
+                    if (!existsInServer) {
+                        employeeData[empId].jobs.push(localJob);
+                    }
+                });
             }
         }
         
         console.log('Loaded', Object.keys(employeeData).length, 'employees (including custom)');
+
+        // Pre-fill employee from localStorage only after data is loaded
+        const savedEmp = localStorage.getItem('sst_employee');
+        if (savedEmp) {
+            try {
+                const emp = JSON.parse(savedEmp);
+                if (emp.empId && employeeData[emp.empId]) {
+                    const empIdInput = document.getElementById('empId');
+                    if (empIdInput) {
+                        empIdInput.value = emp.empId;
+                        empIdInput.dispatchEvent(new Event('input'));
+                    }
+                } else {
+                    localStorage.removeItem('sst_employee');
+                }
+            } catch {}
+        }
     } catch (err) {
         console.warn('Could not load employee data:', err);
         employeeData = {};
@@ -45,10 +58,15 @@ function setupAutoFill() {
     const empListDiv = document.getElementById('empAutocompleteList');
     const jobListDiv = document.getElementById('jobAutocompleteList');
     
-    const deptFilterContainer = document.getElementById('deptFilterContainer');
+    const yearFilterContainer = document.getElementById('yearFilterContainer');
+    const jobSearchContainer = document.getElementById('jobSearchContainer');
+    const jobSearchInput = document.getElementById('jobSearchInput');
     const jobSelectWrapper = document.getElementById('jobSelectWrapper');
     const jobSelect = document.getElementById('jobSelect');
-    const chips = document.querySelectorAll('.dept-chip');
+    const yearTrigger = document.getElementById('yearTrigger');
+    const yearTriggerText = document.getElementById('yearTriggerText');
+    const yearPickerModal = document.getElementById('yearPickerModal');
+    const yearPickBtns = document.querySelectorAll('.year-pick-btn');
 
     function closeAllLists(elmnt) {
         if (empListDiv && elmnt !== document.getElementById('empId')) {
@@ -72,8 +90,8 @@ function setupAutoFill() {
     if (!empIdInput) return;
 
     let allEmployeeJobs = [];
-    let currentEmployeeDept = '';
-    let activeDept = 'all';
+    let activeYear = 'all';
+    let jobSearchText = '';
 
     // Populate the unified job select dropdown
     function populateJobSelect() {
@@ -82,11 +100,14 @@ function setupAutoFill() {
         const currentSelection = jobSelect.value;
         jobSelect.innerHTML = '<option value="">-- เลือก JOB-Number / โครงการ --</option>';
         
-        // Filter jobs based on activeDept, and exclude already-completed jobs
         const filteredJobs = allEmployeeJobs.filter(job => {
-            if (job.isCompleted) return false; // Hide completed jobs
-            if (activeDept === 'all') return true;
-            return currentEmployeeDept === activeDept;
+            if (job.isCompleted) return false;
+            if (activeYear !== 'all' && job.year !== activeYear) return false;
+            if (jobSearchText) {
+                const q = jobSearchText.toLowerCase();
+                return job.jobNumber.toLowerCase().includes(q) || (job.customer || '').toLowerCase().includes(q);
+            }
+            return true;
         });
         
         filteredJobs.forEach(job => {
@@ -143,15 +164,16 @@ function setupAutoFill() {
             if (val) {
                 const matches = [];
                 for (const [id, emp] of Object.entries(employeeData)) {
-                    if (id.toLowerCase().includes(val.toLowerCase()) || emp.name.toLowerCase().includes(val.toLowerCase())) {
-                        matches.push({ id, name: emp.name });
+                    const displayId = emp.sst_id || id;
+                    if (displayId.toLowerCase().includes(val.toLowerCase()) || emp.name.toLowerCase().includes(val.toLowerCase())) {
+                        matches.push({ id, displayId, name: emp.name });
                     }
                 }
                 matches.forEach(match => {
                     const item = document.createElement('button');
                     item.type = 'button';
                     item.className = 'autocomplete-item';
-                    item.innerHTML = `<strong>${match.id}</strong> - ${match.name}`;
+                    item.innerHTML = `<strong>${match.displayId}</strong> - ${match.name}`;
                     item.addEventListener('click', function() {
                         empIdInput.value = match.id;
                         closeAllLists();
@@ -168,9 +190,14 @@ function setupAutoFill() {
         if (customerInfo) customerInfo.hidden = true;
         selectedCustomer = '';
         allEmployeeJobs = [];
-        currentEmployeeDept = '';
-        activeDept = 'all';
-        
+        activeYear = 'all';
+        jobSearchText = '';
+        if (jobSearchInput) jobSearchInput.value = '';
+        if (yearTriggerText) yearTriggerText.textContent = 'ทุกปี';
+        yearPickBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-year') === 'all'));
+        if (yearTrigger) yearTrigger.style.borderColor = '';
+        if (yearTrigger) yearTrigger.style.color = '';
+
         if (jobInput) {
             jobInput.value = '';
             jobInput.style.display = 'none';
@@ -180,38 +207,27 @@ function setupAutoFill() {
             jobSelect.value = '';
         }
 
-        // Reset chips class active
-        chips.forEach(c => {
-            if (c.getAttribute('data-dept') === 'all') {
-                c.classList.add('active');
-            } else {
-                c.classList.remove('active');
-            }
-        });
-        
         if (employee) {
             empNameInput.value = employee.name;
             empNameInput.classList.add('autofilled');
             empNameInput.readOnly = true;
 
             allEmployeeJobs = employee.jobs || [];
-            currentEmployeeDept = employee.dept || '';
-            
+
             populateJobSelect();
-            
-            if (deptFilterContainer) {
-                deptFilterContainer.style.display = allEmployeeJobs.length > 0 ? 'flex' : 'none';
-            }
-            if (jobSelectWrapper) {
-                jobSelectWrapper.style.display = allEmployeeJobs.length > 0 ? 'block' : 'none';
-            }
+
+            const hasJobs = allEmployeeJobs.length > 0;
+            if (yearFilterContainer) yearFilterContainer.style.display = hasJobs ? 'block' : 'none';
+            if (jobSearchContainer) jobSearchContainer.style.display = hasJobs ? 'block' : 'none';
+            if (jobSelectWrapper) jobSelectWrapper.style.display = hasJobs ? 'block' : 'none';
 
             showToast(`พบข้อมูล: ${employee.name}`, 1800);
         } else {
             empNameInput.classList.remove('autofilled');
             empNameInput.readOnly = false;
-            
-            if (deptFilterContainer) deptFilterContainer.style.display = 'none';
+
+            if (yearFilterContainer) yearFilterContainer.style.display = 'none';
+            if (jobSearchContainer) jobSearchContainer.style.display = 'none';
             if (jobSelectWrapper) jobSelectWrapper.style.display = 'none';
             
             // Show manual text input for non-existent employees
@@ -243,16 +259,35 @@ function setupAutoFill() {
         });
     }
 
-    // Set up event listeners for the inline Department Chips
-    chips.forEach(chip => {
-        chip.addEventListener('click', function() {
-            chips.forEach(c => c.classList.remove('active'));
+    // Year picker modal
+    if (yearTrigger && yearPickerModal) {
+        yearTrigger.addEventListener('click', () => { yearPickerModal.hidden = false; });
+        yearPickerModal.addEventListener('click', e => { if (e.target === yearPickerModal) yearPickerModal.hidden = true; });
+    }
+    yearPickBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            yearPickBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            activeDept = this.getAttribute('data-dept');
-            
+            activeYear = this.getAttribute('data-year');
+            const label = activeYear === 'all' ? 'ทุกปี' : activeYear;
+            if (yearTriggerText) yearTriggerText.textContent = label;
+            if (yearTrigger) {
+                const isFiltered = activeYear !== 'all';
+                yearTrigger.style.borderColor = isFiltered ? 'var(--primary)' : '';
+                yearTrigger.style.color = isFiltered ? 'var(--primary)' : '';
+            }
+            if (yearPickerModal) yearPickerModal.hidden = true;
             populateJobSelect();
         });
     });
+
+    // Job search event listener
+    if (jobSearchInput) {
+        jobSearchInput.addEventListener('input', function() {
+            jobSearchText = this.value.trim();
+            populateJobSelect();
+        });
+    }
 
     // Set up event listener for the unified Job Select dropdown
     if (jobSelect) {
@@ -309,16 +344,9 @@ function setupAutoFill() {
 
         const q = searchQuery.toLowerCase().trim();
 
-        // Filter jobs based on activeDept and searchQuery, and exclude completed jobs
         const filtered = allEmployeeJobs.filter(job => {
-            // Exclude already-surveyed jobs entirely
             if (job.isCompleted) return false;
-
-            // Department filter
-            const matchDept = (activeDept === 'all') || (currentEmployeeDept === activeDept);
-            if (!matchDept) return false;
-
-            // Search query filter
+            if (activeYear !== 'all' && job.year !== activeYear) return false;
             if (!q) return true;
             const jobNo = (job.jobNumber || '').toLowerCase();
             const cust = (job.customer || '').toLowerCase();
@@ -345,17 +373,30 @@ function setupAutoFill() {
                 `;
 
                 item.addEventListener('click', () => {
+                    const customer = job.customer || '';
+                    selectedCustomer = customer;
+
+                    if (jobInput) {
+                        jobInput.value = job.jobNumber;
+                        jobInput.style.display = 'none';
+                        jobInput.required = false;
+                    }
+                    if (customerDisplay) {
+                        customerDisplay.textContent = customer || '-';
+                    }
+                    if (customerInfo) {
+                        customerInfo.hidden = false;
+                    }
+
+                    const triggerText = document.getElementById('jobSelectTriggerText');
+                    if (triggerText) {
+                        triggerText.textContent = `${job.jobNumber} | ${customer}`;
+                    }
                     if (jobSelect) {
                         jobSelect.value = job.jobNumber;
-                        jobSelect.dispatchEvent(new Event('change'));
-
-                        const triggerText = document.getElementById('jobSelectTriggerText');
-                        if (triggerText) {
-                            triggerText.textContent = `${job.jobNumber} | ${job.customer || ''}`;
-                        }
-
-                        closeJobSearchModal();
                     }
+
+                    closeJobSearchModal();
                 });
                 modalJobList.appendChild(item);
             });
@@ -864,20 +905,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAutoFill();
     setupFormSubmit();
     
-    const saved = localStorage.getItem('sst_employee');
-    if (saved) {
-        try {
-            const emp = JSON.parse(saved);
-            if (emp.empId) {
-                const empIdInput = document.getElementById('empId');
-                if (empIdInput) {
-                    empIdInput.value = emp.empId;
-                    empIdInput.dispatchEvent(new Event('input'));
-                }
-            }
-        } catch {}
-    }
-
     const btnSave = document.getElementById('btn-save');
     const btnShare = document.getElementById('btn-share');
     const btnCopy = document.getElementById('btn-copy');

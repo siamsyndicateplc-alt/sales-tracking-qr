@@ -205,25 +205,33 @@ router.get('/summary', async (req, res) => {
     }
 });
 
+// Convert UTC ISO string to Asia/Bangkok local time string
+function toThaiTimeString(isoString) {
+    if (!isoString) return '';
+    try {
+        return new Date(isoString).toLocaleString('sv-SE', { timeZone: 'Asia/Bangkok' });
+    } catch { return isoString; }
+}
+
 // CSV Export endpoint
 router.get('/export-csv', async (req, res) => {
     try {
         const surveys = await getAllRowsAsObjects('survey_results');
-        
+
         const headers = [
-            'submitted_at', 'employee_id', 'employee_name', 
+            'submitted_at', 'employee_id', 'employee_name',
             'project_name', 'customer_name',
             'score_q1', 'score_q2', 'score_q3', 'score_q4',
             'avg_score', 'improvements', 'improvements_other',
             'contact_name', 'contact_phone', 'contact_email'
         ];
-        
+
         let csv = headers.join(',') + '\n';
         surveys.forEach(s => {
             const scores = ['q1','q2','q3','q4'].map(q => parseFloat(s[`score_${q}`]) || 0);
             const avg = scores.reduce((a,b) => a+b, 0) / 4;
             const row = [
-                s.submitted_at,
+                toThaiTimeString(s.submitted_at),
                 s.employee_id,
                 s.employee_name,
                 s.project_name,
