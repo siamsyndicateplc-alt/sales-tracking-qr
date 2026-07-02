@@ -1,18 +1,18 @@
 // ===== Helpers =====
 const THAI_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
-// Format ISO date string into Thai format: "22 พ.ค. 69 (08.50 น.)"
+// Format ISO date string into Thai format: "22 พ.ค. 69 (08.50 น.)" — always Asia/Bangkok
 function formatThaiDate(isoString) {
     if (!isoString) return '-';
     const d = new Date(isoString);
     if (isNaN(d.getTime())) return '-';
-    const day = d.getDate();
-    const month = THAI_MONTHS[d.getMonth()];
-    const year = d.getFullYear() + 543;
-    const yearShort = String(year).slice(-2);
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${day} ${month} ${yearShort} (${hh}.${mm} น.)`;
+    const fmt = new Intl.DateTimeFormat('th-TH', {
+        timeZone: 'Asia/Bangkok',
+        day: 'numeric', month: 'short', year: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    });
+    const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+    return `${parts.day} ${parts.month} ${parts.year} (${parts.hour}.${parts.minute} น.)`;
 }
 
 // Determine badge color from average score
