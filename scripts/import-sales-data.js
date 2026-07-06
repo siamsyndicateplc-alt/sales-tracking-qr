@@ -1,5 +1,6 @@
 // scripts/import-sales-data.js
-// รัน: node scripts/import-sales-data.js "<Jobs_Export.xlsx>" "<ราชชื่อช่างไซต์งาน.xlsx>"
+// รัน (แทนที่ทั้งหมด): node scripts/import-sales-data.js "<Jobs_Export.xlsx>" "<ราชชื่อช่างไซต์งาน.xlsx>"
+// รัน (เพิ่มอย่างเดียว): node scripts/import-sales-data.js "<Jobs_Export.xlsx>" "<ราชชื่อช่างไซต์งาน.xlsx>" --add-only
 require('dotenv').config();
 const XLSX = require('xlsx');
 const { createClient } = require('@supabase/supabase-js');
@@ -12,10 +13,13 @@ const supabase = createClient(
 async function main() {
     const jobsFile = process.argv[2];
     const empFile  = process.argv[3];
+    const addOnly  = process.argv.includes('--add-only');
     if (!jobsFile || !empFile) {
-        console.error('Usage: node scripts/import-sales-data.js "<Jobs_Export.xlsx>" "<ราชชื่อช่างไซต์งาน.xlsx>"');
+        console.error('Usage: node scripts/import-sales-data.js "<Jobs_Export.xlsx>" "<ราชชื่อช่างไซต์งาน.xlsx>" [--add-only]');
         process.exit(1);
     }
+    if (addOnly) console.log('โหมด: เพิ่มอย่างเดียว (ไม่ลบของเก่า)');
+    else console.log('โหมด: แทนที่ทั้งหมด (ลบของเก่าก่อน)');
 
     // --- Build name + sst_id map from ราชชื่อช่างไซต์งาน.xlsx ---
     const nameMap = {};   // code → name
@@ -42,15 +46,17 @@ async function main() {
     }
     console.log(`อ่าน Jobs ได้ ${rows.length} แถว (${wb.SheetNames.length} sheets: ${wb.SheetNames.join(', ')})`);
 
-    // --- 0. Clear existing data ---
-    console.log('\n[0/2] ลบข้อมูลเก่า...');
-    const { error: delJobsErr } = await supabase.from('employee_master_data').delete().neq('emp_id', '');
-    if (delJobsErr) console.error('  ERROR ลบ employee_master_data:', delJobsErr.message);
-    else console.log('  ✓ ลบ employee_master_data เรียบร้อย');
+    // --- 0. Clear existing data (ข้ามถ้า --add-only) ---
+    if (!addOnly) {
+        console.log('\n[0/2] ลบข้อมูลเก่า...');
+        const { error: delJobsErr } = await supabase.from('employee_master_data').delete().neq('emp_id', '');
+        if (delJobsErr) console.error('  ERROR ลบ employee_master_data:', delJobsErr.message);
+        else console.log('  ✓ ลบ employee_master_data เรียบร้อย');
 
-    const { error: delEmpErr } = await supabase.from('employees').delete().neq('emp_id', '');
-    if (delEmpErr) console.error('  ERROR ลบ employees:', delEmpErr.message);
-    else console.log('  ✓ ลบ employees เรียบร้อย');
+        const { error: delEmpErr } = await supabase.from('employees').delete().neq('emp_id', '');
+        if (delEmpErr) console.error('  ERROR ลบ employees:', delEmpErr.message);
+        else console.log('  ✓ ลบ employees เรียบร้อย');
+    }
 
     // --- 1. Import Employees (from name file as source of truth) ---
     console.log('\n[1/2] Import พนักงาน...');
@@ -77,13 +83,20 @@ async function main() {
     console.log(`  พบ Sales Person unique: ${empList.length} คน`);
     if (noName.length) console.log(`  ไม่มีชื่อจริง (ใช้ code แทน): ${noName.join(', ')}`);
 
-    let empSuccess = 0, empErr = 0;
+    let empSuccess = 0, empSkip = 0, empErr = 0;
     for (const emp of empList) {
-        const { error } = await supabase.from('employees').insert(emp);
-        if (error) { console.error(`  ERROR: ${emp.emp_id} —`, error.message); empErr++; }
-        else empSuccess++;
+        if (addOnly) {
+            // upsert: เพิ่มใหม่หรืออัปเดตถ้ามีอยู่แล้ว
+            const { error } = await supabase.from('employees').upsert(emp, { onConflict: 'emp_id' });
+            if (error) { console.error(`  ERROR: ${emp.emp_id} —`, error.message); empErr++; }
+            else empSuccess++;
+        } else {
+            const { error } = await supabase.from('employees').insert(emp);
+            if (error) { console.error(`  ERROR: ${emp.emp_id} —`, error.message); empErr++; }
+            else empSuccess++;
+        }
     }
-    console.log(`  ✓ เพิ่มพนักงาน ${empSuccess} | Error ${empErr}`);
+    console.log(`  ✓ เพิ่ม/อัปเดตพนักงาน ${empSuccess} | ข้าม ${empSkip} | Error ${empErr}`);
 
     // --- 2. Import Jobs (INV100 only, deduplicated by job_number) ---
     console.log('\n[2/2] Import งาน (INV100 เท่านั้น)...');
@@ -106,6 +119,16 @@ async function main() {
         const year          = String(row['Year'] || '').trim();
 
         if (!emp_id || !job_number) { jobSkip++; continue; }
+
+        // ถ้า --add-only ให้เช็คก่อนว่ามี job นี้อยู่แล้วมั้ย
+        if (addOnly) {
+            const { data: existing } = await supabase
+                .from('employee_master_data')
+                .select('job_number')
+                .eq('job_number', job_number)
+                .maybeSingle();
+            if (existing) { jobSkip++; continue; }
+        }
 
         const { error } = await supabase.from('employee_master_data').insert({
             emp_id,
