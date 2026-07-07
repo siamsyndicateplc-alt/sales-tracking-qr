@@ -113,9 +113,10 @@ async function main() {
 
     let jobSuccess = 0, jobSkip = 0, jobErr = 0;
     for (const row of inv100) {
-        const emp_id        = String(row['Sales Person'] || '').trim();
+        // รองรับทั้ง Jobs_Export และ Sales_Export (column ต่างกัน)
+        const emp_id        = String(row['Sales Person'] || row['Salesperson Code'] || '').trim();
         const job_number    = String(row['No.'] || '').trim();
-        const customer_name = String(row['Bill-to Name'] || '').trim();
+        const customer_name = String(row['Bill-to Name'] || row['Sell-to Customer Name'] || '').trim();
         const year          = String(row['Year'] || '').trim();
 
         if (!emp_id || !job_number) { jobSkip++; continue; }
