@@ -6,6 +6,18 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
       "port": 3000
+    },
+    {
+      "name": "warranty-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "-y",
+        "serve",
+        "-l",
+        "4321",
+        "C:\\Users\\tawan.b\\AppData\\Local\\Temp\\claude\\D--Qr-TK-sales-tracking-qr--1-\\2f96fd54-4dd9-4c0a-9026-0570b7cea367\\scratchpad\\preview"
+      ],
+      "port": 4321
     }
   ]
 }
