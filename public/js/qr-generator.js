@@ -735,6 +735,27 @@ async function createAndDisplayQR(data) {
     }
 }
 
+function startCountdownAndReset(seconds) {
+    if (window._countdownInterval) clearInterval(window._countdownInterval);
+    const desc = document.getElementById('waiting-scanned-desc');
+    let remaining = seconds;
+
+    function updateText() {
+        if (desc) desc.innerHTML = `ลูกค้าสแกน QR Code แล้ว กำลังกรอกแบบประเมิน...<br><strong style="color:#D97706;">กลับหน้าหลักใน ${remaining} วินาที</strong>`;
+    }
+    updateText();
+
+    window._countdownInterval = setInterval(() => {
+        remaining--;
+        updateText();
+        if (remaining <= 0) {
+            clearInterval(window._countdownInterval);
+            window._countdownInterval = null;
+            document.getElementById('btn-reset')?.click();
+        }
+    }, 1000);
+}
+
 function showWaitingSection(state) {
     const qrSection = document.getElementById('qr-section');
     const waitingSection = document.getElementById('scan-waiting-section');
@@ -758,6 +779,10 @@ function showWaitingSection(state) {
 }
 
 function cleanupQrSection() {
+    if (window._countdownInterval) {
+        clearInterval(window._countdownInterval);
+        window._countdownInterval = null;
+    }
     const waitingSection = document.getElementById('scan-waiting-section');
     if (waitingSection) waitingSection.hidden = true;
 
@@ -880,6 +905,7 @@ function startStatusPolling(project_name) {
                     }
                     showToast('ลูกค้าสแกน QR Code แล้ว กำลังตอบแบบสอบถาม...', 3000);
                     showWaitingSection('scanned');
+                    startCountdownAndReset(5);
                 }
             }
         } catch (err) {
