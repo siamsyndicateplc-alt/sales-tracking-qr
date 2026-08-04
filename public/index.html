@@ -218,7 +218,100 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
+        /* ===== Scan Waiting Section ===== */
+        .scan-waiting-card {
+            text-align: center;
+            padding: 32px 24px 28px;
+        }
+        .scan-state-block {
+            margin-bottom: 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+        .scan-state-icon-wrap {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 16px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scan-pulse-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+        }
+        @keyframes ring-pulse-gray {
+            0%   { box-shadow: 0 0 0 0 rgba(156,163,175,0.45); }
+            65%  { box-shadow: 0 0 0 22px rgba(156,163,175,0); }
+            100% { box-shadow: 0 0 0 0 rgba(156,163,175,0); }
+        }
+        @keyframes ring-pulse-amber {
+            0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.45); }
+            65%  { box-shadow: 0 0 0 22px rgba(245,158,11,0); }
+            100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+        }
+        .scan-pulse-ring-gray  { animation: ring-pulse-gray  2.2s ease-out infinite; }
+        .scan-pulse-ring-amber { animation: ring-pulse-amber 1.8s ease-out infinite; }
+        .scan-icon-inner {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 1;
+        }
+        .scan-icon-gray   { background: #F3F4F6; color: #9CA3AF; }
+        .scan-icon-amber  { background: #FEF3C7; color: #D97706; }
+        .scan-icon-green  { background: #D1FAE5; color: #10B981; box-shadow: 0 4px 20px rgba(16,185,129,0.25); }
+        .scan-state-title {
+            font-size: 18px; font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+        }
+        .scan-state-desc {
+            font-size: 13px; color: var(--text-secondary);
+            line-height: 1.75; margin: 0;
+        }
+        .waiting-job-card {
+            background: #F9FAFB;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .waiting-job-row {
+            display: flex; gap: 8px;
+            margin-bottom: 8px; font-size: 13px;
+        }
+        .waiting-job-row:last-child { margin-bottom: 0; }
+        .waiting-job-label {
+            color: var(--text-secondary);
+            min-width: 116px; flex-shrink: 0;
+        }
+        .waiting-job-value {
+            color: var(--text-primary);
+            font-weight: 600; word-break: break-word;
+        }
+        .waiting-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-sent-to-customer {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            font-size: 15px; font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(15,110,86,0.15);
+            font-family: inherit;
+            margin-top: 6px;
+        }
+        .btn-sent-to-customer:hover  { background: var(--primary-hover); }
+        .btn-sent-to-customer:active { transform: scale(0.98); }
+
         /* Premium 6-Digit OTP Box styling */
         .otp-inputs-wrapper {
             display: flex;
@@ -525,10 +618,103 @@
       </svg>
       <span>คัดลอกลิ้งค์</span>
     </button>
-    
-    
+
+    <!-- ปุ่มส่งให้ลูกค้าแล้ว → ไปหน้ารอสแกน -->
+    <button type="button" class="btn-sent-to-customer" id="btn-sent-to-customer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+      <span>ส่งให้ลูกค้าแล้ว → รอสแกน</span>
+    </button>
+
   </div>
-  
+
+</section>
+
+<!-- ===== Waiting for Scan Section ===== -->
+<section class="qr-display-card scan-waiting-card" id="scan-waiting-section" hidden>
+
+  <!-- State 1: รอสแกน -->
+  <div id="waiting-state-waiting" class="scan-state-block">
+    <div class="scan-state-icon-wrap">
+      <div class="scan-pulse-ring scan-pulse-ring-gray"></div>
+      <div class="scan-icon-inner scan-icon-gray">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="3" height="3" rx="0.5"></rect>
+          <rect x="18" y="14" width="3" height="3" rx="0.5"></rect>
+          <rect x="14" y="18" width="3" height="3" rx="0.5"></rect>
+          <rect x="18" y="18" width="3" height="3" rx="0.5"></rect>
+        </svg>
+      </div>
+    </div>
+    <h2 class="scan-state-title">รอลูกค้าสแกน QR Code</h2>
+    <p class="scan-state-desc">ให้ลูกค้าสแกน QR Code เพื่อทำแบบสอบถาม<br>ระบบจะอัปเดตสถานะโดยอัตโนมัติ</p>
+  </div>
+
+  <!-- State 2: กำลังตอบ -->
+  <div id="waiting-state-scanned" class="scan-state-block" hidden>
+    <div class="scan-state-icon-wrap">
+      <div class="scan-pulse-ring scan-pulse-ring-amber"></div>
+      <div class="scan-icon-inner scan-icon-amber">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+      </div>
+    </div>
+    <h2 class="scan-state-title" style="color: #92400E;">ลูกค้ากำลังตอบแบบสอบถาม</h2>
+    <p class="scan-state-desc">ลูกค้าสแกน QR Code แล้ว<br>กำลังกรอกแบบประเมินความพึงพอใจ...</p>
+  </div>
+
+  <!-- State 3: เสร็จเรียบร้อย -->
+  <div id="waiting-state-completed" class="scan-state-block" hidden>
+    <div class="scan-state-icon-wrap">
+      <div class="scan-icon-inner scan-icon-green">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+    </div>
+    <h2 class="scan-state-title" style="color: #065F46;">ส่งแบบประเมินเรียบร้อยแล้ว!</h2>
+    <p class="scan-state-desc">ลูกค้าทำแบบสอบถามและส่งข้อมูลแล้ว<br>ขอบคุณสำหรับการใช้งานระบบ</p>
+  </div>
+
+  <!-- ข้อมูลงาน -->
+  <div class="waiting-job-card">
+    <div class="waiting-job-row">
+      <span class="waiting-job-label">ชื่อเซลล์:</span>
+      <span class="waiting-job-value" id="waiting-display-emp">-</span>
+    </div>
+    <div class="waiting-job-row">
+      <span class="waiting-job-label">JOB-Number:</span>
+      <span class="waiting-job-value" id="waiting-display-job">-</span>
+    </div>
+    <div class="waiting-job-row">
+      <span class="waiting-job-label">ลูกค้า/โครงการ:</span>
+      <span class="waiting-job-value" id="waiting-display-customer">-</span>
+    </div>
+  </div>
+
+  <!-- ปุ่มกลับ / ใหม่ -->
+  <div class="waiting-actions">
+    <button type="button" class="btn-outline btn-full" id="btn-back-to-qr">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span>กลับไปดู QR Code</span>
+    </button>
+    <button type="button" class="btn-sent-to-customer" id="btn-new-qr-from-waiting">
+      สร้าง QR ใหม่
+    </button>
+  </div>
+
 </section>
 </main>
 

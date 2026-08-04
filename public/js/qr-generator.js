@@ -735,7 +735,32 @@ async function createAndDisplayQR(data) {
     }
 }
 
+function showWaitingSection(state) {
+    const qrSection = document.getElementById('qr-section');
+    const waitingSection = document.getElementById('scan-waiting-section');
+    if (!waitingSection) return;
+
+    const waitingJob = document.getElementById('waiting-display-job');
+    const waitingCustomer = document.getElementById('waiting-display-customer');
+    const waitingEmp = document.getElementById('waiting-display-emp');
+    if (waitingJob) waitingJob.textContent = document.getElementById('displayProject')?.textContent || '-';
+    if (waitingCustomer) waitingCustomer.textContent = document.getElementById('displayCustomer')?.textContent || '-';
+    if (waitingEmp) waitingEmp.textContent = document.getElementById('displayEmpName')?.textContent || '-';
+
+    if (qrSection) qrSection.hidden = true;
+    waitingSection.hidden = false;
+
+    document.getElementById('waiting-state-waiting').hidden  = state !== 'waiting';
+    document.getElementById('waiting-state-scanned').hidden  = state !== 'scanned';
+    document.getElementById('waiting-state-completed').hidden = state !== 'completed';
+
+    waitingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function cleanupQrSection() {
+    const waitingSection = document.getElementById('scan-waiting-section');
+    if (waitingSection) waitingSection.hidden = true;
+
     const container = document.querySelector('.qr-canvas-container');
     if (container) {
         container.innerHTML = `
@@ -837,6 +862,7 @@ function startStatusPolling(project_name) {
                     if (btnCopy) btnCopy.disabled = true;
 
                     showToast('ลูกค้าทำการส่งแบบประเมินเรียบร้อยแล้ว!', 3000);
+                    showWaitingSection('completed');
 
                 } else if (data.scanned && !isScannedState) {
                     isScannedState = true;
@@ -853,6 +879,7 @@ function startStatusPolling(project_name) {
                         text.textContent = 'ลูกค้ากำลังทำแบบสอบถาม...';
                     }
                     showToast('ลูกค้าสแกน QR Code แล้ว กำลังตอบแบบสอบถาม...', 3000);
+                    showWaitingSection('scanned');
                 }
             }
         } catch (err) {
@@ -1034,6 +1061,35 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 fallbackCopyText(generatedSurveyUrl);
             }
+        });
+    }
+
+    const btnSentToCustomer = document.getElementById('btn-sent-to-customer');
+    if (btnSentToCustomer) {
+        btnSentToCustomer.addEventListener('click', () => {
+            showWaitingSection('waiting');
+        });
+    }
+
+    const btnBackToQr = document.getElementById('btn-back-to-qr');
+    if (btnBackToQr) {
+        btnBackToQr.addEventListener('click', () => {
+            const waitingSection = document.getElementById('scan-waiting-section');
+            const qrSection = document.getElementById('qr-section');
+            if (waitingSection) waitingSection.hidden = true;
+            if (qrSection) {
+                qrSection.hidden = false;
+                qrSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+
+    const btnNewQrFromWaiting = document.getElementById('btn-new-qr-from-waiting');
+    if (btnNewQrFromWaiting) {
+        btnNewQrFromWaiting.addEventListener('click', () => {
+            const waitingSection = document.getElementById('scan-waiting-section');
+            if (waitingSection) waitingSection.hidden = true;
+            document.getElementById('btn-reset')?.click();
         });
     }
 
