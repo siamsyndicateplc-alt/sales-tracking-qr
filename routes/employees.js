@@ -1,46 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { supabase } = require('../db/supabase-client');
+const pool = require('../db/pg-client');
 
 router.get('/', async (req, res) => {
     try {
-        let empRes = await supabase.from('employees').select('emp_id, emp_name, department, sst_id');
-        if (empRes.error && empRes.error.message && empRes.error.message.includes('sst_id')) {
-            empRes = await supabase.from('employees').select('emp_id, emp_name, department');
-        }
-        // Fetch all jobs with pagination (Supabase default limit is 1000)
-        let allJobRows = [];
-        let page = 0;
-        const pageSize = 1000;
-        while (true) {
-            const { data, error } = await supabase
-                .from('employee_master_data')
-                .select('emp_id, job_number, customer_name, year')
-                .range(page * pageSize, (page + 1) * pageSize - 1);
-            if (error || !data || data.length === 0) break;
-            allJobRows = allJobRows.concat(data);
-            if (data.length < pageSize) break;
-            page++;
-        }
-        const jobRes = { data: allJobRows, error: null };
-
-        const [surveyRes] = await Promise.all([
-            supabase.from('survey_results').select('project_name')
+        const [empRes, jobRes, surveyRes] = await Promise.all([
+            pool.query('SELECT emp_id, emp_name, department, sst_id FROM employees'),
+            pool.query('SELECT emp_id, job_number, customer_name, year FROM employee_master_data'),
+            pool.query('SELECT project_name FROM survey_results')
         ]);
 
-        if (empRes.error) throw empRes.error;
-        if (jobRes.error) console.warn('Could not fetch employee_master_data:', jobRes.error);
-        if (surveyRes.error) console.warn('Could not fetch survey_results:', surveyRes.error);
-
         const completedJobs = new Set();
-        if (surveyRes.data) {
-            surveyRes.data.forEach(s => { if (s.project_name) completedJobs.add(s.project_name); });
-        }
+        surveyRes.rows.forEach(s => { if (s.project_name) completedJobs.add(s.project_name); });
 
-        // Build result keyed by sst_id (when available) or emp_id
         const result = {};
-        const codeToKey = {}; // Sales Person code → result key
-        for (const emp of (empRes.data || [])) {
+        const codeToKey = {};
+        for (const emp of empRes.rows) {
             const key = emp.sst_id || emp.emp_id;
             result[key] = {
                 name: emp.emp_name,
@@ -51,8 +26,7 @@ router.get('/', async (req, res) => {
             codeToKey[emp.emp_id] = key;
         }
 
-        // Attach jobs from employee_master_data (linked via Sales Person code)
-        for (const row of (jobRes.data || [])) {
+        for (const row of jobRes.rows) {
             if (!row.job_number) continue;
             const key = codeToKey[row.emp_id];
             if (!key || !result[key]) continue;

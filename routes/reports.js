@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getAllRowsAsObjects } = require('../db/supabase-client');
+const pool = require('../db/pg-client');
 const basicAuth = require('express-basic-auth');
 
-// Apply Basic Auth (keep existing middleware)
 router.use(basicAuth({
     users: { [process.env.DASHBOARD_USER || 'admin']: process.env.DASHBOARD_PASS || 'sstadmin2026' },
     challenge: true,
@@ -12,24 +11,23 @@ router.use(basicAuth({
 
 router.get('/summary', async (req, res) => {
     try {
-        // Fetch all 3 tabs from Google Sheets in parallel
-        const [qrLogs, surveys, events] = await Promise.all([
-            getAllRowsAsObjects('qr_logs'),
-            getAllRowsAsObjects('survey_results'),
-            getAllRowsAsObjects('events')
+        const [qrRes, surveyRes, eventRes] = await Promise.all([
+            pool.query('SELECT * FROM qr_logs ORDER BY created_at DESC'),
+            pool.query('SELECT * FROM survey_results ORDER BY submitted_at DESC'),
+            pool.query('SELECT * FROM events ORDER BY timestamp DESC')
         ]);
 
-        // ====================================
-        // 1. Top 4 stats cards
-        // ====================================
+        const qrLogs  = qrRes.rows;
+        const surveys = surveyRes.rows;
+        const events  = eventRes.rows;
+
         const qrCreated = qrLogs.length;
         const surveyCompleted = surveys.length;
-        const responseRate = qrCreated > 0 
-            ? Math.round((surveyCompleted / qrCreated) * 1000) / 10 
+        const responseRate = qrCreated > 0
+            ? Math.round((surveyCompleted / qrCreated) * 1000) / 10
             : 0;
-        
-        // Overall average score (across q1-q4 of all surveys)
-        const allScores = surveys.flatMap(s => 
+
+        const allScores = surveys.flatMap(s =>
             ['q1','q2','q3','q4']
                 .map(q => parseFloat(s[`score_${q}`]))
                 .filter(n => !isNaN(n) && n > 0)
@@ -37,26 +35,18 @@ router.get('/summary', async (req, res) => {
         const avgScore = allScores.length > 0
             ? Math.round((allScores.reduce((a,b) => a+b, 0) / allScores.length) * 10) / 10
             : 0;
-            
+
         const overallDistribution = {5:0, 4:0, 3:0, 2:0, 1:0};
         allScores.forEach(s => {
             const rounded = Math.round(s);
             if (overallDistribution[rounded] !== undefined) overallDistribution[rounded]++;
         });
 
-        // ====================================
-        // 2. Per-employee summary (group by employee_id)
-        // ====================================
         const employeeMap = {};
         surveys.forEach(s => {
             const key = s.employee_id;
             if (!employeeMap[key]) {
-                employeeMap[key] = {
-                    employee_id: s.employee_id,
-                    employee_name: s.employee_name,
-                    scores: [],
-                    count: 0
-                };
+                employeeMap[key] = { employee_id: s.employee_id, employee_name: s.employee_name, scores: [], count: 0 };
             }
             employeeMap[key].count++;
             ['q1','q2','q3','q4'].forEach(q => {
@@ -74,104 +64,57 @@ router.get('/summary', async (req, res) => {
                 : 0
         }));
 
-        // ====================================
-        // 3. Pending customers
-        //    = qr_logs entries WITHOUT matching survey_results
-        // ====================================
-        const surveyKeys = new Set(surveys.map(s => 
-            `${s.employee_id}|${s.project_name}|${s.customer_name}`
-        ));
+        const surveyKeys = new Set(surveys.map(s => `${s.employee_id}|${s.project_name}|${s.customer_name}`));
         const scannedKeys = new Set(
-            events
-                .filter(e => e.event_type === 'scanned')
-                .map(e => `${e.employee_id}|${e.project_name}|${e.customer_name}`)
+            events.filter(e => e.event_type === 'scanned')
+                  .map(e => `${e.employee_id}|${e.project_name}|${e.customer_name}`)
         );
 
         const pendingCustomers = qrLogs
-            .filter(q => {
-                const key = `${q.employee_id}|${q.project_name}|${q.customer_name}`;
-                return !surveyKeys.has(key); // Survey not yet submitted
-            })
+            .filter(q => !surveyKeys.has(`${q.employee_id}|${q.project_name}|${q.customer_name}`))
             .map(q => {
                 const key = `${q.employee_id}|${q.project_name}|${q.customer_name}`;
-                const status = scannedKeys.has(key) 
-                    ? 'สแกนแล้วยังไม่ตอบ'   // Scanned but not submitted
-                    : 'ยังไม่ได้สแกน';      // Not scanned yet
                 return {
                     scan_time: q.created_at,
                     customer_name: q.customer_name,
                     project_name: q.project_name,
                     employee_name: q.employee_name,
-                    status: status
+                    status: scannedKeys.has(key) ? 'สแกนแล้วยังไม่ตอบ' : 'ยังไม่ได้สแกน'
                 };
             })
             .sort((a, b) => new Date(b.scan_time) - new Date(a.scan_time))
             .slice(0, 20);
 
-        // ====================================
-        // 4. Average score per question (q1-q4) + Distribution for hover
-        // ====================================
         const avgPerQuestion = {};
         ['q1','q2','q3','q4'].forEach(q => {
-            const scores = surveys
-                .map(s => parseFloat(s[`score_${q}`]))
-                .filter(n => !isNaN(n) && n > 0);
-                
+            const scores = surveys.map(s => parseFloat(s[`score_${q}`])).filter(n => !isNaN(n) && n > 0);
             const distribution = {5:0, 4:0, 3:0, 2:0, 1:0};
-            scores.forEach(s => {
-                const rounded = Math.round(s);
-                if (distribution[rounded] !== undefined) distribution[rounded]++;
-            });
-            
+            scores.forEach(s => { const r = Math.round(s); if (distribution[r] !== undefined) distribution[r]++; });
             avgPerQuestion[q] = {
-                avg: scores.length > 0
-                    ? Math.round((scores.reduce((a,b) => a+b, 0) / scores.length) * 10) / 10
-                    : 0,
-                distribution: distribution,
+                avg: scores.length > 0 ? Math.round((scores.reduce((a,b) => a+b, 0) / scores.length) * 10) / 10 : 0,
+                distribution,
                 total: scores.length
             };
         });
 
-        // ====================================
-        // 5. "Improvements" breakdown
-        //    (stored in `improvements` column as "option1|option2|...")
-        // ====================================
-        const improvementOptions = [
-            'ไม่มีสิ่งที่ควรปรับปรุง',
-            'การให้บริการหลังการขาย',
-            'ราคาสินค้า',
-            'ความรวดเร็วในการประสานงานขาย',
-            'คุณภาพสินค้า',
-            'การประชาสัมพันธ์',
-            'อื่น ๆ'
-        ];
+        const improvementOptions = ['ไม่มีสิ่งที่ควรปรับปรุง','การให้บริการหลังการขาย','ราคาสินค้า','ความรวดเร็วในการประสานงานขาย','คุณภาพสินค้า','การประชาสัมพันธ์','อื่น ๆ'];
         const counts = {};
         improvementOptions.forEach(opt => counts[opt] = 0);
-
         surveys.forEach(s => {
             const values = (s.improvements || '').split('|').filter(Boolean);
             values.forEach(v => {
-                // Fuzzy match to handle slight spelling variations
-                const matched = improvementOptions.find(opt => 
-                    opt === v || opt.includes(v.slice(0, 5)) || v.includes(opt.slice(0, 5))
-                );
+                const matched = improvementOptions.find(opt => opt === v || opt.includes(v.slice(0,5)) || v.includes(opt.slice(0,5)));
                 if (matched) counts[matched]++;
             });
         });
-
         const total = Object.values(counts).reduce((a,b) => a+b, 0);
         const improvementBreakdown = improvementOptions.map(opt => ({
-            label: opt,
-            count: counts[opt],
+            label: opt, count: counts[opt],
             percent: total > 0 ? Math.round((counts[opt] / total) * 1000) / 10 : 0
         }));
 
-        // ====================================
-        // 6. Recent free-text feedback (improvements_other)
-        // ====================================
         const recentFeedback = surveys
             .filter(s => s.improvements_other && s.improvements_other.trim())
-            .sort((a,b) => new Date(b.submitted_at) - new Date(a.submitted_at))
             .slice(0, 10)
             .map(s => ({
                 submitted_at: s.submitted_at,
@@ -180,76 +123,46 @@ router.get('/summary', async (req, res) => {
                 text: s.improvements_other
             }));
 
-        // ====================================
-        // Send response
-        // ====================================
         res.json({
-            totals: {
-                qr_created: qrCreated,
-                survey_completed: surveyCompleted,
-                response_rate: responseRate,
-                avg_score: avgScore,
-                overall_distribution: overallDistribution,
-                overall_total_scores: allScores.length
-            },
+            totals: { qr_created: qrCreated, survey_completed: surveyCompleted, response_rate: responseRate, avg_score: avgScore, overall_distribution: overallDistribution, overall_total_scores: allScores.length },
             by_employee: byEmployee,
             pending_customers: pendingCustomers,
             avg_per_question: avgPerQuestion,
             improvement_breakdown: improvementBreakdown,
             recent_feedback: recentFeedback
         });
-
     } catch (err) {
         console.error('Dashboard summary error:', err);
         res.status(500).json({ error: 'Failed to load summary' });
     }
 });
 
-// Convert UTC ISO string to Asia/Bangkok local time string
 function toThaiTimeString(isoString) {
     if (!isoString) return '';
-    try {
-        return new Date(isoString).toLocaleString('sv-SE', { timeZone: 'Asia/Bangkok' });
-    } catch { return isoString; }
+    try { return new Date(isoString).toLocaleString('sv-SE', { timeZone: 'Asia/Bangkok' }); }
+    catch { return isoString; }
 }
 
-// CSV Export endpoint
 router.get('/export-csv', async (req, res) => {
     try {
-        const surveys = await getAllRowsAsObjects('survey_results');
-
-        const headers = [
-            'submitted_at', 'employee_id', 'employee_name',
-            'project_name', 'customer_name',
-            'score_q1', 'score_q2', 'score_q3', 'score_q4',
-            'avg_score', 'improvements', 'improvements_other',
-            'contact_name', 'contact_phone', 'contact_email'
-        ];
-
+        const { rows: surveys } = await pool.query('SELECT * FROM survey_results ORDER BY submitted_at DESC');
+        const headers = ['submitted_at','employee_id','employee_name','project_name','customer_name','score_q1','score_q2','score_q3','score_q4','avg_score','improvements','improvements_other','contact_name','contact_phone','contact_email'];
         let csv = headers.join(',') + '\n';
         surveys.forEach(s => {
             const scores = ['q1','q2','q3','q4'].map(q => parseFloat(s[`score_${q}`]) || 0);
             const avg = scores.reduce((a,b) => a+b, 0) / 4;
-            const row = [
-                toThaiTimeString(s.submitted_at),
-                s.employee_id,
-                s.employee_name,
-                s.project_name,
-                s.customer_name,
-                s.score_q1, s.score_q2, s.score_q3, s.score_q4,
-                avg.toFixed(2),
-                `"${(s.improvements || '').replace(/"/g, '""')}"`,
-                `"${(s.improvements_other || '').replace(/"/g, '""')}"`,
-                s.contact_name || '',
-                s.contact_phone || '',
-                s.contact_email || ''
-            ];
-            csv += row.join(',') + '\n';
+            csv += [
+                toThaiTimeString(s.submitted_at), s.employee_id, s.employee_name,
+                s.project_name, s.customer_name,
+                s.score_q1, s.score_q2, s.score_q3, s.score_q4, avg.toFixed(2),
+                `"${(s.improvements||'').replace(/"/g,'""')}"`,
+                `"${(s.improvements_other||'').replace(/"/g,'""')}"`,
+                s.contact_name||'', s.contact_phone||'', s.contact_email||''
+            ].join(',') + '\n';
         });
-
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', `attachment; filename=survey_${Date.now()}.csv`);
-        res.send('\uFEFF' + csv); // BOM so Excel reads Thai correctly
+        res.send('﻿' + csv);
     } catch (err) {
         console.error('Export CSV error:', err);
         res.status(500).send('Export failed');

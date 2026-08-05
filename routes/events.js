@@ -1,25 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { insertRow } = require('../db/supabase-client');
-const { randomUUID } = require('crypto');
+const pool = require('../db/pg-client');
 
 const sanitizeString = (str) => {
     if (typeof str !== 'string') return '';
     return str.replace(/<[^>]*>/g, '').replace(/[^\p{L}\p{N}\p{M}\s\-_./()]/gu, '').trim().substring(0, 100);
 };
 
-/**
- * POST /api/events
- * Body: { session_id, event_type, employee_id, employee_name, customer_name, project_name, metadata }
- * 
- * event_type อาจเป็น:
- *   - "scanned"           → ลูกค้าสแกน QR Code สำเร็จ
- *   - "survey_submitted"  → ลูกค้าให้ดาวเสร็จแล้ว
- *   - "ms_forms_opened"   → ลูกค้ากดปุ่ม "ดำเนินการต่อ" ไป MS Forms
- *   - "skipped_ms_forms"  → ลูกค้ากด "ข้ามขั้นตอนนี้"
- */
+const VALID_EVENTS = ['scanned', 'survey_submitted', 'ms_forms_opened', 'skipped_ms_forms', 'declined_at_step_1'];
+
 router.post('/', async (req, res) => {
-    // Basic Validation
     if (!req.body.session_id || !req.body.event_type) {
         return res.status(400).json({ error: 'Missing required fields: session_id, event_type' });
     }
@@ -30,35 +20,23 @@ router.post('/', async (req, res) => {
     const employee_name = sanitizeString(req.body.employee_name);
     const customer_name = sanitizeString(req.body.customer_name);
     const project_name = sanitizeString(req.body.project_name);
-    
-    // metadata: keep as object for jsonb column
+
     let metadata = req.body.metadata || null;
     if (typeof metadata === 'string') {
         try { metadata = JSON.parse(metadata); } catch { metadata = null; }
     }
 
-    const VALID_EVENTS = ['scanned', 'survey_submitted', 'ms_forms_opened', 'skipped_ms_forms'];
     if (!VALID_EVENTS.includes(event_type)) {
         return res.status(400).json({ error: `Invalid event_type. Must be one of: ${VALID_EVENTS.join(', ')}` });
     }
 
-    const id = randomUUID();
-    const timestamp = new Date().toISOString();
-
     try {
-        await insertRow('events', {
-            id,
-            timestamp,
-            session_id,
-            event_type,
-            employee_id: employee_id || '',
-            employee_name: employee_name || '',
-            customer_name: customer_name || '',
-            project_name: project_name || '',
-            metadata: metadata || null
-        });
-
-        res.json({ id, timestamp, event_type, message: 'Event recorded' });
+        const { rows } = await pool.query(
+            `INSERT INTO events (session_id, event_type, employee_id, employee_name, customer_name, project_name, metadata)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, timestamp`,
+            [session_id, event_type, employee_id || '', employee_name || '', customer_name || '', project_name || '', metadata ? JSON.stringify(metadata) : null]
+        );
+        res.json({ id: rows[0].id, timestamp: rows[0].timestamp, event_type, message: 'Event recorded' });
     } catch (err) {
         console.error('Event tracking failed:', err);
         res.status(500).json({ error: 'Failed to record event' });
