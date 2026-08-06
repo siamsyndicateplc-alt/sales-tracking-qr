@@ -1094,12 +1094,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const btnSentToCustomer = document.getElementById('btn-sent-to-customer');
-    if (btnSentToCustomer) {
-        btnSentToCustomer.addEventListener('click', () => {
-            showWaitingSection('waiting');
-        });
-    }
 
 
 
