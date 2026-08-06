@@ -183,22 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
     });
 
-    // 4. PDPA Toggle
-    const pdpaToggleBtn = document.getElementById('pdpaToggleBtn');
-    const pdpaToggleLessBtn = document.getElementById('pdpaToggleLessBtn');
-    const pdpaFullText = document.getElementById('pdpaFullText');
-
-    pdpaToggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        pdpaFullText.hidden = false;
-        pdpaToggleBtn.style.display = 'none';
-    });
-
-    pdpaToggleLessBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        pdpaFullText.hidden = true;
-        pdpaToggleBtn.style.display = 'inline';
-    });
 
 
 
