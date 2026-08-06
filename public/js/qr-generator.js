@@ -751,7 +751,11 @@ function startCountdownAndReset(seconds) {
         if (remaining <= 0) {
             clearInterval(window._countdownInterval);
             window._countdownInterval = null;
-            document.getElementById('btn-reset')?.click();
+            cleanupQrSection();
+            const qrSection = document.getElementById('qr-section');
+            const formCard = document.querySelector('.qr-card');
+            if (qrSection) { qrSection.hidden = true; qrSection.classList.add('hidden'); }
+            if (formCard) { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         }
     }, 1000);
 }
@@ -1097,27 +1101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const btnBackToQr = document.getElementById('btn-back-to-qr');
-    if (btnBackToQr) {
-        btnBackToQr.addEventListener('click', () => {
-            const waitingSection = document.getElementById('scan-waiting-section');
-            const qrSection = document.getElementById('qr-section');
-            if (waitingSection) waitingSection.hidden = true;
-            if (qrSection) {
-                qrSection.hidden = false;
-                qrSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
-    }
 
-    const btnNewQrFromWaiting = document.getElementById('btn-new-qr-from-waiting');
-    if (btnNewQrFromWaiting) {
-        btnNewQrFromWaiting.addEventListener('click', () => {
-            const waitingSection = document.getElementById('scan-waiting-section');
-            if (waitingSection) waitingSection.hidden = true;
-            document.getElementById('btn-reset')?.click();
-        });
-    }
 
     if (btnReset) {
         btnReset.addEventListener('click', () => {
