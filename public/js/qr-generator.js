@@ -4,6 +4,18 @@ let employeeData = {};
 let selectedCustomer = '';
 let generatedSurveyUrl = '';
 
+function stripSSTPrefix(id) {
+    return id ? id.replace(/^SST0+/i, '') : '';
+}
+function resolveFullEmpId(shortVal) {
+    const upper = shortVal.toUpperCase();
+    if (employeeData[upper]) return upper;
+    for (const key of Object.keys(employeeData)) {
+        if (stripSSTPrefix(key).toUpperCase() === upper) return key;
+    }
+    return upper;
+}
+
 async function loadEmployeeData() {
     try {
         const token = window.getAuthToken ? await window.getAuthToken() : null;
@@ -87,17 +99,6 @@ function setupAutoFill() {
     const customerInfo = document.getElementById('customerInfo');
     const customerDisplay = document.getElementById('customerDisplay');
 
-    function stripSSTPrefix(id) {
-        return id ? id.replace(/^SST0+/i, '') : '';
-    }
-    function resolveFullEmpId(shortVal) {
-        const upper = shortVal.toUpperCase();
-        if (employeeData[upper]) return upper;
-        for (const key of Object.keys(employeeData)) {
-            if (stripSSTPrefix(key).toUpperCase() === upper) return key;
-        }
-        return upper;
-    }
 
     if (!empIdInput) return;
 
