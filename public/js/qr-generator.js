@@ -924,7 +924,25 @@ async function renderQR(canvas, url) {
         width: 240,
         margin: 1,
         color: { dark: '#0F6E56', light: '#FFFFFF' },
-        errorCorrectionLevel: 'M'
+        errorCorrectionLevel: 'H'
+    });
+
+    await new Promise((resolve) => {
+        const logo = new Image();
+        logo.onload = () => {
+            const ctx = canvas.getContext('2d');
+            const logoSize = 46;
+            const pad = 5;
+            const box = logoSize + pad * 2;
+            const x = (canvas.width - box) / 2;
+            const y = (canvas.height - box) / 2;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x, y, box, box);
+            ctx.drawImage(logo, x + pad, y + pad, logoSize, logoSize);
+            resolve();
+        };
+        logo.onerror = resolve;
+        logo.src = '/img/company_logo.png';
     });
 
     const dataUrl = canvas.toDataURL('image/png');
