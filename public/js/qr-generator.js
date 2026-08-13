@@ -40,7 +40,7 @@ async function loadEmployeeData() {
                 if (emp.empId && employeeData[emp.empId]) {
                     const empIdInput = document.getElementById('empId');
                     if (empIdInput) {
-                        empIdInput.value = emp.empId;
+                        empIdInput.value = emp.empId.replace(/^SST0+/i, '');
                         empIdInput.dispatchEvent(new Event('input'));
                     }
                 } else {
@@ -86,6 +86,18 @@ function setupAutoFill() {
     const jobInput = document.getElementById('jobNumberInput');
     const customerInfo = document.getElementById('customerInfo');
     const customerDisplay = document.getElementById('customerDisplay');
+
+    function stripSSTPrefix(id) {
+        return id ? id.replace(/^SST0+/i, '') : '';
+    }
+    function resolveFullEmpId(shortVal) {
+        const upper = shortVal.toUpperCase();
+        if (employeeData[upper]) return upper;
+        for (const key of Object.keys(employeeData)) {
+            if (stripSSTPrefix(key).toUpperCase() === upper) return key;
+        }
+        return upper;
+    }
 
     if (!empIdInput) return;
 
@@ -165,17 +177,19 @@ function setupAutoFill() {
                 const matches = [];
                 for (const [id, emp] of Object.entries(employeeData)) {
                     const displayId = emp.sst_id || id;
-                    if (displayId.toLowerCase().includes(val.toLowerCase()) || emp.name.toLowerCase().includes(val.toLowerCase())) {
-                        matches.push({ id, displayId, name: emp.name });
+                    const shortId = stripSSTPrefix(displayId);
+                    const lval = val.toLowerCase();
+                    if (shortId.toLowerCase().includes(lval) || displayId.toLowerCase().includes(lval) || emp.name.toLowerCase().includes(lval)) {
+                        matches.push({ id, displayId, shortId, name: emp.name });
                     }
                 }
                 matches.forEach(match => {
                     const item = document.createElement('button');
                     item.type = 'button';
                     item.className = 'autocomplete-item';
-                    item.innerHTML = `<strong>${match.displayId}</strong> - ${match.name}`;
+                    item.innerHTML = `<strong>${match.shortId}</strong> - ${match.name}`;
                     item.addEventListener('click', function() {
-                        empIdInput.value = match.id;
+                        empIdInput.value = match.shortId;
                         closeAllLists();
                         empIdInput.dispatchEvent(new Event('input'));
                     });
@@ -184,7 +198,7 @@ function setupAutoFill() {
             }
         }
 
-        const empId = val.toUpperCase();
+        const empId = resolveFullEmpId(val);
         const employee = employeeData[empId];
 
         if (customerInfo) customerInfo.hidden = true;
@@ -561,7 +575,7 @@ function setupFormSubmit() {
         const jobValue = jobInput ? jobInput.value.trim() : '';
 
         const data = {
-            empId: document.getElementById('empId').value.trim().toUpperCase(),
+            empId: resolveFullEmpId(document.getElementById('empId').value.trim()),
             empName: document.getElementById('empName').value.trim(),
             projectName: jobValue,
             customerName: selectedCustomer || ''
@@ -925,36 +939,6 @@ async function renderQR(canvas, url) {
         margin: 1,
         color: { dark: '#0F6E56', light: '#FFFFFF' },
         errorCorrectionLevel: 'H'
-    });
-
-    await new Promise((resolve) => {
-        const logo = new Image();
-        logo.onload = () => {
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
-            const r = 44;
-
-            // White circle background
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fill();
-            ctx.clip();
-
-            // Draw full symbol (no crop needed - file has no text)
-            const d = r * 2;
-            const scale = Math.max(d / logo.naturalWidth, d / logo.naturalHeight);
-            const dw = logo.naturalWidth * scale;
-            const dh = logo.naturalHeight * scale;
-            ctx.drawImage(logo, cx - dw / 2, cy - dh / 2, dw, dh);
-
-            ctx.restore();
-            resolve();
-        };
-        logo.onerror = resolve;
-        logo.src = '/img/sst_symbol.png';
     });
 
     const dataUrl = canvas.toDataURL('image/png');
