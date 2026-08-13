@@ -931,14 +931,29 @@ async function renderQR(canvas, url) {
         const logo = new Image();
         logo.onload = () => {
             const ctx = canvas.getContext('2d');
-            const logoSize = 46;
-            const pad = 5;
-            const box = logoSize + pad * 2;
-            const x = (canvas.width - box) / 2;
-            const y = (canvas.height - box) / 2;
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const r = 44;
+
+            // White circle background
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(x, y, box, box);
-            ctx.drawImage(logo, x + pad, y + pad, logoSize, logoSize);
+            ctx.fill();
+            ctx.clip();
+
+            // Crop bottom ~38% (text area), keep symbol only
+            const srcX = 30;
+            const srcW = logo.naturalWidth - 60;
+            const srcH = Math.floor(logo.naturalHeight * 0.62);
+            const d = r * 2;
+            const scale = Math.max(d / srcW, d / srcH);
+            const dw = srcW * scale;
+            const dh = srcH * scale;
+            ctx.drawImage(logo, srcX, 0, srcW, srcH, cx - dw / 2, cy - dh / 2, dw, dh);
+
+            ctx.restore();
             resolve();
         };
         logo.onerror = resolve;
