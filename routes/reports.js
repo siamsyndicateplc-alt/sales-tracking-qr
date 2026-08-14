@@ -97,7 +97,7 @@ router.get('/summary', async (req, res) => {
             };
         });
 
-        const improvementOptions = ['ไม่มีสิ่งที่ควรปรับปรุง','การให้บริการหลังการขาย','ราคาสินค้า','ความรวดเร็วในการประสานงานขาย','คุณภาพสินค้า','การประชาสัมพันธ์','อื่น ๆ'];
+        const improvementOptions = ['ไม่มีสิ่งที่ควรปรับปรุง','กระบวนการสั่งซื้อ','การประชาสัมพันธ์','ความรวดเร็วในการประสานงานขาย','อื่น ๆ'];
         const counts = {};
         improvementOptions.forEach(opt => counts[opt] = 0);
         surveys.forEach(s => {
