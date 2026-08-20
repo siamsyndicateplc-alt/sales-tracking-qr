@@ -907,23 +907,35 @@ function startStatusPolling(project_name) {
 
                     showToast('ลูกค้าทำการส่งแบบประเมินเรียบร้อยแล้ว!', 3000);
                     showWaitingSection('completed');
+                    startCountdownAndReset(5);
 
                 } else if (data.scanned && !isScannedState) {
                     isScannedState = true;
+                    clearInterval(window.statusPollInterval);
+                    window.statusPollInterval = null;
+
                     if (badge) {
-                        badge.style.background = '#FEF3C7';
-                        badge.style.color = '#92400E';
-                        badge.style.borderColor = '#FDE68A';
+                        badge.style.background = '#D1FAE5';
+                        badge.style.color = '#065F46';
+                        badge.style.borderColor = '#A7F3D0';
                     }
                     if (dot) {
-                        dot.className = 'status-pulse-amber';
-                        dot.style.background = '#F59E0B';
+                        dot.className = 'status-pulse-green';
+                        dot.style.background = '#10B981';
                     }
                     if (text) {
-                        text.textContent = 'ลูกค้ากำลังทำแบบสอบถาม...';
+                        text.textContent = 'ส่งแบบประเมินเรียบร้อยแล้ว!';
                     }
-                    showToast('ลูกค้าสแกน QR Code แล้ว กำลังตอบแบบสอบถาม...', 3000);
-                    showWaitingSection('scanned');
+                    if (overlay) {
+                        overlay.style.opacity = '1';
+                        overlay.style.pointerEvents = 'auto';
+                    }
+                    if (btnSave) btnSave.disabled = true;
+                    if (btnShare) btnShare.disabled = true;
+                    if (btnCopy) btnCopy.disabled = true;
+
+                    showToast('ส่งแบบประเมินเรียบร้อยแล้ว!', 3000);
+                    showWaitingSection('completed');
                     startCountdownAndReset(5);
                 }
             }
