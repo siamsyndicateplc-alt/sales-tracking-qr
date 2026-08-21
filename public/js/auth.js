@@ -74,8 +74,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const res = await fetch('/api/employees');
         if (res.ok) {
-            const list = await res.json();
-            list.forEach(emp => { employeeData[emp.id] = emp.name; });
+            const data = await res.json();
+            // data = { "SST00751": { name: "...", ... }, ... }
+            for (const [id, info] of Object.entries(data)) {
+                employeeData[id] = info.name || '';
+            }
         }
     } catch (e) { /* ignore */ }
 
@@ -94,12 +97,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nameDisplay = document.getElementById('login-emp-name');
     const loginBtn = document.getElementById('btn-login');
 
+    const nameText = document.getElementById('login-emp-name-text');
+
     if (empInput) {
         empInput.addEventListener('input', () => {
             const match = findEmployee(empInput.value);
-            if (nameDisplay) {
-                nameDisplay.textContent = match ? match.name : '';
-                nameDisplay.style.color = match ? '#0F6E56' : '#9CA3AF';
+            if (nameText) {
+                if (match) {
+                    nameText.textContent = match.name;
+                    nameText.style.color = '#0F6E56';
+                    nameText.style.fontWeight = '600';
+                } else {
+                    nameText.textContent = empInput.value.trim() ? 'ไม่พบรหัสพนักงาน' : 'จะขึ้นอัตโนมัติเมื่อกรอกรหัส';
+                    nameText.style.color = empInput.value.trim() ? '#EF4444' : '#9CA3AF';
+                    nameText.style.fontWeight = '400';
+                }
             }
         });
         empInput.addEventListener('keydown', (e) => {

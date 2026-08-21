@@ -390,10 +390,13 @@
                 <label class="form-label-login" for="login-emp-id">รหัสพนักงาน</label>
                 <input type="text" id="login-emp-id" class="form-input-login" placeholder="เช่น 751" autocomplete="off" inputmode="numeric">
             </div>
-            <div class="form-group-login" style="margin-top: 8px; min-height: 28px;">
-                <span id="login-emp-name" style="font-size: 15px; font-weight: 600; color: #0F6E56;"></span>
+            <div class="form-group-login" style="margin-top: 10px;">
+                <label class="form-label-login">ชื่อ - นามสกุล</label>
+                <div id="login-emp-name" class="form-input-login" style="display:flex; align-items:center; background:#F9FAFB; color:#0F6E56; font-weight:600; min-height:44px; cursor:default;">
+                    <span id="login-emp-name-text" style="color:#9CA3AF; font-weight:400;">จะขึ้นอัตโนมัติเมื่อกรอกรหัส</span>
+                </div>
             </div>
-            <button type="button" id="btn-login" class="btn-login" style="margin-top: 12px;">
+            <button type="button" id="btn-login" class="btn-login" style="margin-top: 14px;">
                 เข้าสู่ระบบ
             </button>
         </div>
