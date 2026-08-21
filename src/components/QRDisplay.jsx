@@ -50,11 +50,11 @@ export default function QRDisplay({ qrData }) {
               <span className="text-gray-900">{data.empId}</span>
             </div>
             <div>
-              <span className="font-medium">ชื่อเซลล์: </span>
+              <span className="font-medium">ชื่อพนักงาน: </span>
               <span className="text-gray-900">{data.empName}</span>
             </div>
             <div>
-              <span className="font-medium">JOB-Number: </span>
+              <span className="font-medium">JOB/SO-Number: </span>
               <span className="text-gray-900">{data.jobNumber}</span>
             </div>
             <div>
