@@ -44,22 +44,23 @@ async function loadEmployeeData() {
         
         console.log('Loaded', Object.keys(employeeData).length, 'employees (including custom)');
 
-        // Pre-fill employee from localStorage only after data is loaded
-        const savedEmp = localStorage.getItem('sst_employee');
-        if (savedEmp) {
-            try {
-                const emp = JSON.parse(savedEmp);
-                if (emp.empId && employeeData[emp.empId]) {
-                    const empIdInput = document.getElementById('empId');
-                    if (empIdInput) {
-                        empIdInput.value = emp.empId.replace(/^SST0+/i, '');
-                        empIdInput.dispatchEvent(new Event('input'));
-                    }
-                } else {
-                    localStorage.removeItem('sst_employee');
+        // Pre-fill and lock employee field from login session
+        try {
+            const session = JSON.parse(localStorage.getItem('emp_session') || 'null');
+            if (session && session.empId && employeeData[session.empId]) {
+                const empIdInput = document.getElementById('empId');
+                const empAutocompleteList = document.getElementById('empAutocompleteList');
+                if (empIdInput) {
+                    empIdInput.value = session.empId.replace(/^SST0+/i, '');
+                    empIdInput.readOnly = true;
+                    empIdInput.style.background = '#F3F4F6';
+                    empIdInput.style.cursor = 'default';
+                    empIdInput.style.color = '#6B7280';
+                    if (empAutocompleteList) empAutocompleteList.style.display = 'none';
+                    empIdInput.dispatchEvent(new Event('input'));
                 }
-            } catch {}
-        }
+            }
+        } catch {}
     } catch (err) {
         console.warn('Could not load employee data:', err);
         employeeData = {};
@@ -170,11 +171,11 @@ function setupAutoFill() {
 
     empIdInput.addEventListener('input', function() {
         let val = this.value.trim();
-        
-        // Autocomplete Logic for Employee ID
+
+        // Autocomplete Logic for Employee ID (skip if locked)
         if (empListDiv) {
             empListDiv.innerHTML = '';
-            if (val) {
+            if (val && !empIdInput.readOnly) {
                 const matches = [];
                 for (const [id, emp] of Object.entries(employeeData)) {
                     const displayId = emp.sst_id || id;
