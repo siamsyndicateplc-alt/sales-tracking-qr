@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     nameText.style.color = '#0F6E56';
                     nameText.style.fontWeight = '600';
                 } else {
-                    nameText.textContent = empInput.value.trim() ? 'ไม่พบรหัสพนักงาน' : 'จะขึ้นอัตโนมัติเมื่อกรอกรหัส';
+                    nameText.textContent = empInput.value.trim() ? 'ไม่พบรหัสพนักงาน' : '';
                     nameText.style.color = empInput.value.trim() ? '#EF4444' : '#9CA3AF';
                     nameText.style.fontWeight = '400';
                 }
