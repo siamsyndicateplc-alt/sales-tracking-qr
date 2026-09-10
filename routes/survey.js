@@ -60,7 +60,7 @@ router.get('/check-completed', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    if (!req.body.employee_id || !req.body.score_q1 || !req.body.score_q2 || !req.body.score_q3 || !req.body.score_q4 || !req.body.pdpa_consent_1) {
+    if (!req.body.employee_id || !req.body.score_q1 || !req.body.score_q2 || !req.body.score_q3 || !req.body.pdpa_consent_1) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
