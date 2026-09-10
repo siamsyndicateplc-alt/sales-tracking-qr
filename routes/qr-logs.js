@@ -1,6 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
+function fixUrl(url) {
+    if (!url) return url;
+    const base = process.env.QR_REDIRECT_BASE_URL || '';
+    if (base && url.includes('localhost')) {
+        const origin = base.replace('/scan.html', '');
+        return url.replace(/https?:\/\/localhost:\d+/, origin);
+    }
+    return url;
+}
+
 router.post('/', async (req, res) => {
     const { employee_id, employee_name, project_name, customer_name, generated_url } = req.body;
 
@@ -14,7 +24,8 @@ router.post('/', async (req, res) => {
             if (project_name) {
                 const { rows } = await pool.query('SELECT * FROM qr_logs WHERE project_name = $1 LIMIT 1', [project_name]);
                 if (rows.length > 0) {
-                    return res.json({ already_exists: true, ...rows[0] });
+                    const row = { ...rows[0], generated_url: fixUrl(rows[0].generated_url) };
+                    return res.json({ already_exists: true, ...row });
                 }
             }
             const { rows } = await pool.query(
@@ -29,7 +40,8 @@ router.post('/', async (req, res) => {
             if (project_name) {
                 const { data: existing } = await supabase.from('qr_logs').select('*').eq('project_name', project_name).limit(1);
                 if (existing && existing.length > 0) {
-                    return res.json({ already_exists: true, ...existing[0] });
+                    const row = { ...existing[0], generated_url: fixUrl(existing[0].generated_url) };
+                    return res.json({ already_exists: true, ...row });
                 }
             }
             const id = randomUUID();

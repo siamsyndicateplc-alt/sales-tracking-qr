@@ -44,25 +44,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('projectName').textContent = project || '-';
         document.getElementById('customerName').textContent = customer || '-';
         
-        // Check if already completed
-        fetch(`/api/survey/check-completed?emp_id=${empId}&customer=${encodeURIComponent(customer || '')}&project=${encodeURIComponent(project || '')}`)
-            .then(res => res.json())
+        // Check if already completed (3s timeout — show form on slow/failed response)
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 3000);
+        fetch(`/api/survey/check-completed?emp_id=${empId}&customer=${encodeURIComponent(customer || '')}&project=${encodeURIComponent(project || '')}`, { signal: controller.signal })
+            .then(res => { clearTimeout(tid); return res.json(); })
             .then(data => {
                 setTimeout(() => {
                     if (loadingCard) loadingCard.classList.add('hidden');
                     if (data.completed) {
-                        // Already completed, show success screen
                         if (successCard) successCard.classList.remove('hidden');
                     } else {
-                        // Not completed, show survey form
                         if (errorCard) errorCard.classList.add('hidden');
                         if (surveyCard) surveyCard.classList.remove('hidden');
                     }
                 }, 800);
             })
-            .catch(err => {
-                console.error('Check status error:', err);
-                // Fallback to showing form if check fails
+            .catch(() => {
+                clearTimeout(tid);
                 setTimeout(() => {
                     if (loadingCard) loadingCard.classList.add('hidden');
                     if (errorCard) errorCard.classList.add('hidden');
@@ -72,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 2. Star Ratings Logic
-    const ratings = { q1: 0, q2: 0, q3: 0, q4: 0 };
+    const ratings = { q1: 0, q2: 0, q3: 0 };
     const starContainers = document.querySelectorAll('.stars-container');
     
     const starLabels = {
@@ -199,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnNext && btnBack) {
         btnNext.addEventListener('click', () => {
             // Validate ratings before going to step 2
-            if (ratings.q1 === 0 || ratings.q2 === 0 || ratings.q3 === 0 || ratings.q4 === 0) {
+            if (ratings.q1 === 0 || ratings.q2 === 0 || ratings.q3 === 0) {
                 showToast('กรุณาให้คะแนนความพึงพอใจให้ครบทุกข้อ', 'error');
                 return;
             }
@@ -260,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             score_q1: ratings.q1,
             score_q2: ratings.q2,
             score_q3: ratings.q3,
-            score_q4: ratings.q4,
+            score_q4: 0,
             improvements: improvementsList.join(', '),
             improvements_other: improvementsOtherText,
             contact_name: consentGiven ? document.getElementById('contactName').value.trim() : '',

@@ -193,31 +193,7 @@
         return;
       }
 
-      // 2. ตรวจสอบที่ฝั่ง Server (Fallback เผื่อลูกค้าล้าง Cache หรือสแกนผ่านอุปกรณ์อื่น)
-      try {
-        const checkRes = await fetchWithTimeout('/api/survey/check-completed?emp_id=' + encodeURIComponent(empId) + '&customer=' + encodeURIComponent(customer) + '&project=' + encodeURIComponent(project), { timeout: 6000 });
-        if (checkRes.ok) {
-          const checkData = await checkRes.json();
-          if (checkData.completed || checkData.final_step_done) {
-            localStorage.setItem(completedKey, 'true');
-            const session = {
-              session_id: generateUUID(),
-              emp_id: empId,
-              emp_name: empName,
-              project: project,
-              customer: customer,
-              scanned_at: Date.now(),
-              expires_at: Date.now() + (4 * 60 * 60 * 1000),
-              already_completed: true
-            };
-            localStorage.setItem('sst_session', JSON.stringify(session));
-            window.location.replace('/survey.html');
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('Duplicate check failed, letting user proceed:', err);
-      }
+      // 2. (removed — survey.html handles already-completed check on its own)
 
       // 3. สร้าง session ใหม่ — ยังไม่เคยทำ
       const sessionId = generateUUID();
@@ -234,29 +210,23 @@
 
       // QR scan event is tracked via /api/events below
 
-      // ยิง Event "scanned" → event tracking
-      try {
-        await fetchWithTimeout('/api/events', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            session_id: sessionId,
-            event_type: 'scanned',
-            employee_id: empId,
-            employee_name: empName,
-            customer_name: customer,
-            project_name: project
-          }),
-          timeout: 4000
-        });
-      } catch (err) {
-        console.warn('Event tracking failed (continuing):', err);
-      }
+      // ยิง Event "scanned" → fire and forget (ไม่รอ เพื่อไม่ให้ช้า)
+      fetchWithTimeout('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          event_type: 'scanned',
+          employee_id: empId,
+          employee_name: empName,
+          customer_name: customer,
+          project_name: project
+        }),
+        timeout: 4000
+      }).catch(() => {});
 
-      // Redirect ไปยังหน้า survey.html (Multi-Step Wizard ใหม่)
-      setTimeout(() => {
-        window.location.href = '/survey.html';
-      }, 800);
+      // Redirect ทันที (ไม่รอ event API)
+      window.location.href = '/survey.html';
     })();
   </script>
 </body>

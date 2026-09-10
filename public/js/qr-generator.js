@@ -647,10 +647,7 @@ async function createAndDisplayQR(data) {
     try {
         cleanupQrSection();
 
-        const QR_REDIRECT_BASE = window.QR_REDIRECT_BASE || '/scan.html';
-        const baseUrl = QR_REDIRECT_BASE.startsWith('http')
-            ? QR_REDIRECT_BASE
-            : window.location.origin + QR_REDIRECT_BASE;
+        const baseUrl = window.location.origin + '/scan.html';
         
         const tempParams = new URLSearchParams({
             emp_id: data.empId,
@@ -687,7 +684,7 @@ async function createAndDisplayQR(data) {
                 const resData = await response.json();
                 if (resData.already_exists) {
                     isDuplicate = true;
-                    finalUrl = resData.generated_url || tempUrl;
+                    finalUrl = tempUrl;
                     displayData = {
                         empId: resData.employee_id || data.empId,
                         empName: resData.employee_name || data.empName,
