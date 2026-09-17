@@ -13,7 +13,8 @@ const surveyLimiter = rateLimit({
     message: { error: 'คุณส่งคำขอถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress)
+    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress),
+    validate: { ipKeyGenerator: false }
 });
 
 const eventsLimiter = rateLimit({
@@ -22,7 +23,8 @@ const eventsLimiter = rateLimit({
     message: { error: 'คุณส่งคำขอถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress)
+    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress),
+    validate: { ipKeyGenerator: false }
 });
 
 const configLimiter = rateLimit({
@@ -31,7 +33,8 @@ const configLimiter = rateLimit({
     message: { error: 'คุณส่งคำขอถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' },
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress)
+    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress),
+    validate: { ipKeyGenerator: false }
 });
 
 const app = express();
