@@ -5,12 +5,15 @@ require('dotenv').config();
 const rateLimit = require('express-rate-limit');
 
 // Rate limiters configurations
+const stripPort = (ip) => (ip || '').replace(/^::ffff:/, '').replace(/:\d+$/, '');
+
 const surveyLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 60, // Increased to 60 to prevent blocking multiple clients on the same office/public Wi-Fi
     message: { error: 'คุณส่งคำขอถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress)
 });
 
 const eventsLimiter = rateLimit({
@@ -18,7 +21,8 @@ const eventsLimiter = rateLimit({
     max: 120, // Increased to 120 to support high concurrent scans
     message: { error: 'คุณส่งคำขอถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress)
 });
 
 const configLimiter = rateLimit({
@@ -26,7 +30,8 @@ const configLimiter = rateLimit({
     max: 120, // Increased to 120 to support high concurrent config fetches
     message: { error: 'คุณส่งคำขอถี่เกินไป กรุณาลองใหม่อีกครั้งในภายหลัง' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress)
 });
 
 const app = express();
