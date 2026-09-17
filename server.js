@@ -14,7 +14,7 @@ const surveyLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress),
-    validate: { ipKeyGenerator: false }
+    validate: { keyGeneratorIpFallback: false }
 });
 
 const eventsLimiter = rateLimit({
@@ -24,7 +24,7 @@ const eventsLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress),
-    validate: { ipKeyGenerator: false }
+    validate: { keyGeneratorIpFallback: false }
 });
 
 const configLimiter = rateLimit({
@@ -34,7 +34,7 @@ const configLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => stripPort(req.ip || req.socket.remoteAddress),
-    validate: { ipKeyGenerator: false }
+    validate: { keyGeneratorIpFallback: false }
 });
 
 const app = express();
