@@ -59,7 +59,8 @@
         header{position:sticky;top:0;z-index:50;background:var(--bg-glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border-color);transition:border-color var(--transition-normal),background var(--transition-normal);}
         .nav-content{display:flex;align-items:center;justify-content:space-between;height:72px;}
         .brand-logo{display:flex;align-items:center;gap:.75rem;}
-        .logo-icon{width:42px;height:42px;background:var(--primary-gradient);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Kanit',sans-serif;font-weight:700;font-size:1.25rem;box-shadow:var(--shadow-sm);}
+        .logo-img-wrap{height:42px;display:flex;align-items:center;background:#fff;border-radius:var(--radius-md);padding:4px 10px;box-shadow:var(--shadow-sm);}
+        .logo-img-wrap img{height:34px;width:auto;display:block;}
         .brand-text-title{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
         .brand-text-sub{font-size:.75rem;color:var(--text-muted);display:block;margin-top:-2px;}
         .nav-actions{display:flex;align-items:center;gap:1rem;}
@@ -140,7 +141,7 @@
         <div class="container">
             <div class="nav-content">
                 <a href="/" class="brand-logo">
-                    <div class="logo-icon">SST</div>
+                    <div class="logo-img-wrap"><img src="/images/sst-logo.webp" alt="SST Logo" class="logo-img"></div>
                     <div>
                         <span class="brand-text-title">SST PORTAL</span>
                         <span class="brand-text-sub">สยามซินดิเคทเทคโนโลยี</span>
