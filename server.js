@@ -77,12 +77,14 @@ const surveyRouter = require('./routes/survey');
 const reportsRouter = require('./routes/reports');
 const eventsRouter = require('./routes/events');
 const employeesRouter = require('./routes/employees');
+const webhookRouter = require('./routes/webhook');
 
 app.use('/api/qr-logs', qrLogsRouter);
 app.use('/api/survey', surveyLimiter, surveyRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/events', eventsLimiter, eventsRouter);
 app.use('/api/employees', employeesRouter);
+app.use('/api/webhook', webhookRouter);
 app.use('/api/config', configLimiter);
 
 // Config Endpoints
