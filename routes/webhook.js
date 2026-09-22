@@ -8,6 +8,7 @@ const pool = new Pool({
   database: process.env.CATALOG_DB_NAME || 'catalog_db',
   user: process.env.CATALOG_DB_USER || 'postgres',
   password: process.env.CATALOG_DB_PASSWORD,
+  ssl: false,
 });
 
 function extractField(payload, ...keys) {
