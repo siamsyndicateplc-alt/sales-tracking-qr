@@ -104,6 +104,10 @@ if (!req.body.employee_id || !req.body.score_q1 || !req.body.score_q2 || !req.bo
                  pdpa_consent_1||'', score_q1, score_q2, score_q3, score_q4,
                  improvements||'', improvements_other||'', contact_name||'', contact_phone||'', contact_email||'', pdpa_consent_2||'']
             );
+            try {
+                const wsServer = require('../ws-server');
+                wsServer.broadcast({ type: 'new_survey', data: { employee_name, project_name, customer_name, submitted_at: rows[0].submitted_at } });
+            } catch {}
             return res.json({ id: rows[0].id, submitted_at: rows[0].submitted_at, message: 'ขอบคุณสำหรับความเห็น' });
         } else {
             const { supabase, insertRow } = require('../db/supabase-client');

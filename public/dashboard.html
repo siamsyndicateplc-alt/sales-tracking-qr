@@ -1,175 +1,508 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - SST</title>
-  <link rel="stylesheet" href="/css/fonts.css?v=13">
-  <link rel="stylesheet" href="/css/styles.css?v=14">
-  <link rel="stylesheet" href="/css/dashboard.css?v=13">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST Dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#F0FAF6;--surface:#fff;--surface2:#F7FDFB;--border:#D1EDE4;
+  --primary:#0F6E56;--primary-light:#E0F4EE;--primary-dim:#5BA892;
+  --accent:#F59E0B;--accent-light:#FEF3C7;
+  --text:#1E293B;--text-2:#475569;--text-3:#94A3B8;
+  --good:#10B981;--warn:#F59E0B;--bad:#EF4444;
+  --shadow:0 1px 3px rgba(15,110,86,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(15,110,86,.10);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1F1A;--surface:#122920;--surface2:#163325;--border:#1E4D38;
+  --primary:#2DD4A0;--primary-light:#0D3326;--primary-dim:#5BA892;
+  --accent:#FBBF24;--accent-light:#2D2200;
+  --text:#E2F5EF;--text-2:#94C9B4;--text-3:#4B7A68;
+  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0B1F1A;--surface:#122920;--surface2:#163325;--border:#1E4D38;
+  --primary:#2DD4A0;--primary-light:#0D3326;--primary-dim:#5BA892;
+  --accent:#FBBF24;--accent-light:#2D2200;
+  --text:#E2F5EF;--text-2:#94C9B4;--text-3:#4B7A68;
+  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'IBM Plex Sans Thai','IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+
+/* NAV */
+.nav{background:var(--primary);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.nav-brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:15px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.live-dot{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.8);font-weight:500}
+.live-dot .dot{width:8px;height:8px;border-radius:50%;background:#6EE7B7;box-shadow:0 0 0 2px rgba(110,231,183,.3)}
+.live-dot .dot.off{background:#94A3B8;box-shadow:none}
+.live-dot .dot.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.nav-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:background .2s;white-space:nowrap}
+.nav-btn:hover{background:rgba(255,255,255,.25)}
+
+/* TOAST */
+.toast{position:fixed;top:64px;right:20px;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;box-shadow:var(--shadow-md);display:flex;align-items:flex-start;gap:10px;max-width:320px;transform:translateX(120%);transition:transform .3s cubic-bezier(.4,0,.2,1);border-left:4px solid var(--good)}
+.toast.show{transform:translateX(0)}
+.toast-icon{width:18px;height:18px;flex-shrink:0;color:var(--good);margin-top:1px}
+.toast-title{font-weight:600;font-size:13px;color:var(--text);margin-bottom:2px}
+.toast-sub{font-size:12px;color:var(--text-2)}
+
+/* MAIN */
+.main{max-width:1280px;margin:0 auto;padding:20px 16px 40px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:700px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--primary))}
+.kpi-icon{width:34px;height:34px;border-radius:10px;background:var(--kb,var(--primary-light));display:flex;align-items:center;justify-content:center;margin-bottom:10px;color:var(--kc,var(--primary))}
+.kpi-val{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;margin-bottom:3px}
+.kpi-lbl{font-size:12px;color:var(--text-2);font-weight:500}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.g31{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:900px){.g31{grid-template-columns:1fr}}
+@media(max-width:700px){.g2,.g3{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.cdot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0}
+
+/* CHART */
+.chart-wrap{position:relative;height:200px}
+
+/* SCORE BAR */
+.sitem{margin-bottom:12px}
+.srow{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.slbl{font-size:12px;color:var(--text-2)}
+.sval{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.strack{height:7px;background:var(--surface2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+.sfill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),#2DD4A0);transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:7px 10px;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid var(--border);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:9px 10px;vertical-align:middle}
+.td2{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* PILL */
+.pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill-hi{background:#D1FAE5;color:#065F46}
+.pill-mid{background:var(--accent-light);color:#92400E}
+.pill-lo{background:#FEE2E2;color:#991B1B}
+.pill-consent{background:#D1FAE5;color:#065F46}
+.pill-no{background:var(--surface2);color:var(--text-3)}
+:root[data-theme="dark"] .pill-hi,:root:not([data-theme="light"]) .pill-hi{background:#064E3B;color:#6EE7B7}
+:root[data-theme="dark"] .pill-mid,:root:not([data-theme="light"]) .pill-mid{background:#2D2200;color:#FCD34D}
+:root[data-theme="dark"] .pill-lo,:root:not([data-theme="light"]) .pill-lo{background:#3B0000;color:#FCA5A5}
+:root[data-theme="dark"] .pill-consent,:root:not([data-theme="light"]) .pill-consent{background:#064E3B;color:#6EE7B7}
+:root[data-theme="dark"] .pill-no,:root:not([data-theme="light"]) .pill-no{background:#1E293B;color:var(--text-3)}
+
+/* STARS */
+.stars span{font-size:12px;color:var(--text-3)}
+.stars span.lit{color:var(--accent)}
+
+/* EMP RANK */
+.rank-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.rank-item:last-child{border-bottom:none}
+.rank-n{font-size:12px;font-weight:700;color:var(--text-3);width:18px;text-align:center;font-variant-numeric:tabular-nums}
+.rank-av{width:30px;height:30px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--primary);flex-shrink:0}
+.rank-name{flex:1;font-size:13px;font-weight:500}
+.rank-sub{font-size:11px;color:var(--text-3)}
+.rank-cnt{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+
+/* IMPROVE */
+.imp-item{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);gap:10px}
+.imp-item:last-child{border-bottom:none}
+.imp-lbl{font-size:12px;color:var(--text-2);min-width:130px}
+.imp-bar-wrap{flex:1;height:5px;background:var(--surface2);border-radius:99px;overflow:hidden}
+.imp-bar{height:100%;border-radius:99px;background:var(--accent)}
+.imp-pct{font-size:12px;font-weight:600;color:var(--text-2);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+
+/* PENDING */
+.pend-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.pend-item:last-child{border-bottom:none}
+.pend-icon{width:28px;height:28px;border-radius:8px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)}
+.pend-name{font-size:13px;font-weight:500}
+.pend-sub{font-size:11px;color:var(--text-3)}
+.pend-status{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px}
+.pend-scan{background:var(--accent-light);color:#92400E}
+.pend-none{background:var(--surface2);color:var(--text-3)}
+:root[data-theme="dark"] .pend-scan,:root:not([data-theme="light"]) .pend-scan{background:#2D2200;color:#FCD34D}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-3);font-size:13px;flex-direction:column;gap:12px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* UPDATED FLASH */
+@keyframes flash{0%{background:var(--primary-light)}100%{background:var(--surface)}}
+.flashed{animation:flash .8s ease-out}
+
+/* LAST UPDATED */
+.last-upd{font-size:11px;color:var(--text-3);text-align:right;margin-bottom:10px}
+</style>
 </head>
-<body class="dashboard-body">
+<body>
 
-  <!-- Header -->
-  <header class="dashboard-header">
-    <img src="/img/company_logo.png" alt="SST" class="dashboard-logo">
-    <div class="dashboard-header-text">
-      <h1>Dashboard วิเคราะห์คะแนนความพึงพอใจลูกค้า</h1>
-      <p>สรุปคะแนนความพึงพอใจลูกค้า</p>
+<nav class="nav">
+  <div class="nav-brand">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3m0 4h4v-4m-4 0v-3h4"/></svg>
+    SST Dashboard
+  </div>
+  <div class="nav-right">
+    <div class="live-dot" id="liveIndicator">
+      <div class="dot off" id="liveDot"></div>
+      <span id="liveText">กำลังเชื่อมต่อ...</span>
     </div>
-  </header>
+    <button class="nav-btn" onclick="exportCsv()">Export CSV</button>
+    <button class="nav-btn" onclick="refreshData()">รีเฟรช</button>
+  </div>
+</nav>
 
-  <main class="dashboard-main">
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+  <div>
+    <div class="toast-title" id="toastTitle">แบบสำรวจใหม่!</div>
+    <div class="toast-sub" id="toastSub"></div>
+  </div>
+</div>
 
-    <!-- ===== Section 1: Top Stats Cards (4 cards) ===== -->
-    <section class="stats-grid">
-      <div class="stat-card border-green">
-        <p class="stat-title">การสร้าง QR CODE</p>
-        <p class="stat-value" id="qrCreated">0</p>
-        <p class="stat-desc">จำนวนการสร้าง QR จากพนักงาน</p>
-      </div>
-      <div class="stat-card border-yellow">
-        <p class="stat-title">การตอบประเมิน</p>
-        <p class="stat-value" id="surveyCompleted">0</p>
-        <p class="stat-desc">จำนวนฟอร์มที่ลูกค้าส่งคำตอบกลับ</p>
-      </div>
-      <div class="stat-card border-red">
-        <p class="stat-title">อัตราการประเมิน</p>
-        <p class="stat-value"><span id="responseRate">0</span>%</p>
-        <p class="stat-desc">สัดส่วนลูกค้าที่ตอบกลับแบบสอบถาม</p>
-      </div>
-      <div class="stat-card border-blue">
-        <p class="stat-title">คะแนนความพึงพอใจ</p>
-        <p class="stat-value"><span id="avgScore">0.0</span> <span class="star-icon">★</span></p>
-        <p class="stat-desc">คะแนนความพึงพอใจ 1-5 ดาว</p>
-        <div class="q-tooltip">
-          <div class="q-tooltip-title">สรุปจำนวนคนโหวต</div>
-          <div id="distOverall"></div>
-        </div>
-      </div>
-    </section>
+<div class="main">
+  <div class="last-upd">อัปเดตล่าสุด: <span id="lastUpdated">–</span></div>
 
-    <!-- ===== Section 2: Per-employee summary table ===== -->
-    <section class="card-section">
-      <div class="section-header">
-        <h2>สรุปคะแนนประเมินรายบุคคล</h2>
-        <a href="/api/reports/export-csv" class="btn-csv" id="btnExportCsv">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          ส่งออกไฟล์ CSV
-        </a>
-      </div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>รหัสพนักงาน</th>
-            <th>ชื่อพนักงาน</th>
-            <th>จำนวนการประเมิน</th>
-            <th>คะแนนเฉลี่ย</th>
-          </tr>
-        </thead>
-        <tbody id="employeeTableBody">
-          <tr><td colspan="4" class="loading">กำลังโหลด...</td></tr>
-        </tbody>
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi" style="--kc:#0F6E56;--kb:var(--primary-light)">
+      <div class="kpi-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="kpi-val" id="kSurveys">–</div>
+      <div class="kpi-lbl">แบบสำรวจทั้งหมด</div>
+    </div>
+    <div class="kpi" style="--kc:#F59E0B;--kb:var(--accent-light)">
+      <div class="kpi-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+      <div class="kpi-val" id="kAvg">–</div>
+      <div class="kpi-lbl">คะแนนเฉลี่ย (จาก 5)</div>
+    </div>
+    <div class="kpi" style="--kc:#6366F1;--kb:#EEF2FF">
+      <div class="kpi-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="kpi-val" id="kRate">–</div>
+      <div class="kpi-lbl">Response Rate</div>
+    </div>
+    <div class="kpi" style="--kc:#EC4899;--kb:#FDF2F8">
+      <div class="kpi-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+      <div class="kpi-val" id="kQr">–</div>
+      <div class="kpi-lbl">QR สร้างทั้งหมด</div>
+    </div>
+  </div>
+
+  <!-- ROW 2: CHART + SCORES -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-title"><span class="cdot"></span>แบบสำรวจรายวัน (30 วันล่าสุด)</div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="cdot" style="background:var(--accent)"></span>คะแนนเฉลี่ยแต่ละด้าน</div>
+      <div id="scoreSection"><div class="loading"><div class="spinner"></div></div></div>
+      <div class="card-title" style="margin-top:14px"><span class="cdot" style="background:#6366F1"></span>สิ่งที่ต้องปรับปรุง</div>
+      <div id="improveSection"></div>
+    </div>
+  </div>
+
+  <!-- ROW 3: RECENT SURVEYS -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-title"><span class="cdot"></span>ผลสำรวจล่าสุด</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>ลูกค้า / โปรเจกต์</th>
+          <th>พนักงาน</th>
+          <th>Q1</th><th>Q2</th><th>Q3</th>
+          <th>เฉลี่ย</th>
+          <th>PDPA</th>
+          <th>วันที่</th>
+        </tr></thead>
+        <tbody id="surveyTable"><tr><td colspan="8"><div class="loading"><div class="spinner"></div><span>กำลังโหลด...</span></div></td></tr></tbody>
       </table>
-    </section>
+    </div>
+  </div>
 
-    <!-- ===== Section 3: Pending customers table ===== -->
-    <section class="card-section">
-      <div class="section-header">
-        <h2>รายชื่อลูกค้าที่ค้างลงทะเบียน</h2>
-      </div>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>เวลาสแกน</th>
-            <th>ชื่อลูกค้า</th>
-            <th>โครงการ</th>
-            <th>พนักงานดูแล</th>
-            <th>สถานะล่าสุด</th>
-          </tr>
-        </thead>
-        <tbody id="pendingTableBody">
-          <tr><td colspan="5" class="loading">กำลังโหลด...</td></tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- ROW 4: EMP + IMPROVE + PENDING -->
+  <div class="g3">
+    <div class="card">
+      <div class="card-title"><span class="cdot" style="background:var(--accent)"></span>อันดับพนักงาน</div>
+      <div id="empRank"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="cdot" style="background:#EF4444"></span>ความคิดเห็นเพิ่มเติม</div>
+      <div id="feedbackSection"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="cdot" style="background:var(--warn)"></span>รอตอบแบบสำรวจ</div>
+      <div id="pendingSection"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
 
-    <!-- ===== Section 4: Subsection header ===== -->
-    <section class="subsection-header">
-      <h2>สรุปคะแนนความพึงพอใจ</h2>
-      <p>ความพึงพอใจต่อด้านการขายและบริการ</p>
-    </section>
+</div>
 
-    <!-- ===== Section 5: Per-question average (4 cards) ===== -->
-    <section class="question-stats-grid">
-      <div class="q-stat-card border-green">
-        <p class="q-title">1. สินค้ามีความคุ้มค่าเมื่อเทียบกับราคา</p>
-        <div class="q-score-row">
-          <span class="q-value" id="avgQ1">0.0</span>
-          <div class="q-stars" id="starsQ1"><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span></div>
-        </div>
-        <div class="q-tooltip">
-          <div class="q-tooltip-title">สรุปจำนวนคนโหวต</div>
-          <div id="distQ1"></div>
-        </div>
-      </div>
-      <div class="q-stat-card border-orange">
-        <p class="q-title">2. ข้อมูลในการนำเสนอขายถูกต้อง ครบถ้วน</p>
-        <div class="q-score-row">
-          <span class="q-value" id="avgQ2">0.0</span>
-          <div class="q-stars" id="starsQ2"><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span></div>
-        </div>
-        <div class="q-tooltip">
-          <div class="q-tooltip-title">สรุปจำนวนคนโหวต</div>
-          <div id="distQ2"></div>
-        </div>
-      </div>
-      <div class="q-stat-card border-cyan">
-        <p class="q-title">3. การให้บริการตรงตามความต้องการของท่าน</p>
-        <div class="q-score-row">
-          <span class="q-value" id="avgQ3">0.0</span>
-          <div class="q-stars" id="starsQ3"><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span></div>
-        </div>
-        <div class="q-tooltip">
-          <div class="q-tooltip-title">สรุปจำนวนคนโหวต</div>
-          <div id="distQ3"></div>
-        </div>
-      </div>
-      <div class="q-stat-card border-orange-deep">
-        <p class="q-title">4. กระบวนการสั่งซื้อมีความสะดวก ไม่ซับซ้อน</p>
-        <div class="q-score-row">
-          <span class="q-value" id="avgQ4">0.0</span>
-          <div class="q-stars" id="starsQ4"><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span><span class="empty">★</span></div>
-        </div>
-        <div class="q-tooltip">
-          <div class="q-tooltip-title">สรุปจำนวนคนโหวต</div>
-          <div id="distQ4"></div>
-        </div>
-      </div>
-    </section>
+<script>
+// ── CHART SETUP ──
+const isDark = () => document.documentElement.dataset.theme === 'dark' ||
+  (!document.documentElement.dataset.theme && window.matchMedia('(prefers-color-scheme:dark)').matches);
 
-    <!-- ===== Section 6: Progress bars + Feedback cards ===== -->
-    <section class="bottom-grid">
-      <div class="card-section">
-        <h2>สิ่งที่ลูกค้าต้องการให้มีการปรับปรุง</h2>
-        <div id="improvementBars">
-          <div class="loading">กำลังโหลด...</div>
-        </div>
-      </div>
-      <div class="card-section">
-        <h2>อื่นๆ ระบุเพิ่มเติม</h2>
-        <div id="feedbackList">
-          <div class="loading">กำลังโหลด...</div>
-        </div>
-      </div>
-    </section>
+function cColors() {
+  return {
+    line: isDark() ? '#2DD4A0' : '#0F6E56',
+    f1: isDark() ? 'rgba(45,212,160,.25)' : 'rgba(15,110,86,.18)',
+    f2: isDark() ? 'rgba(45,212,160,0)' : 'rgba(15,110,86,0)',
+    grid: isDark() ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)',
+    txt: isDark() ? '#94C9B4' : '#64748B',
+  };
+}
 
-  </main>
+const ctx = document.getElementById('lineChart').getContext('2d');
+let c = cColors();
+const grad = ctx.createLinearGradient(0,0,0,180);
+grad.addColorStop(0, c.f1); grad.addColorStop(1, c.f2);
 
-  <script src="/js/dashboard.js?v=13"></script>
+const lineChart = new Chart(ctx, {
+  type: 'line',
+  data: { labels: [], datasets: [{ data: [], borderColor: c.line, backgroundColor: grad, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.35, fill: true }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { title: t => t[0].label, label: t => `${t.raw} surveys` } } },
+    scales: {
+      x: { ticks: { color: c.txt, maxTicksLimit: 7, font: { size: 11 } }, grid: { display: false }, border: { display: false } },
+      y: { ticks: { color: c.txt, stepSize: 1, font: { size: 11 } }, grid: { color: c.grid }, border: { display: false }, beginAtZero: true }
+    }
+  }
+});
+
+// ── HELPERS ──
+function avg3(s) { return ((+s.score_q1 + +s.score_q2 + +s.score_q3) / 3); }
+function pillClass(v) { return v >= 4 ? 'pill-hi' : v >= 3 ? 'pill-mid' : 'pill-lo'; }
+function stars(v) {
+  const n = Math.round(v);
+  return `<div class="stars">${[1,2,3,4,5].map(i=>`<span class="${i<=n?'lit':''}">★</span>`).join('')}</div>`;
+}
+function fmtDate(iso) {
+  if (!iso) return '–';
+  try { return new Date(iso).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  catch { return iso; }
+}
+function scoreBar(lbl, avg, max) {
+  const pct = max > 0 ? (avg/max*100).toFixed(0) : 0;
+  return `<div class="sitem">
+    <div class="srow"><span class="slbl">${lbl}</span><span class="sval">${avg} / ${max}</span></div>
+    <div class="strack"><div class="sfill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+// ── RENDER ──
+function render(d) {
+  // KPI
+  document.getElementById('kSurveys').textContent = d.totals.survey_completed.toLocaleString();
+  document.getElementById('kAvg').textContent = d.totals.avg_score.toFixed(1);
+  document.getElementById('kRate').textContent = d.totals.response_rate + '%';
+  document.getElementById('kQr').textContent = d.totals.qr_created.toLocaleString();
+
+  // Daily Chart
+  const days30 = generateDays30();
+  const countMap = {};
+  (d.daily_counts || []).forEach(r => { countMap[r.day] = r.count; });
+  lineChart.data.labels = days30.map(d => d.slice(5));
+  lineChart.data.datasets[0].data = days30.map(d => countMap[d] || 0);
+  lineChart.update();
+
+  // Scores
+  const q = d.avg_per_question || {};
+  const qNames = { q1: 'Q1 · ความพึงพอใจการบริการ', q2: 'Q2 · ความรวดเร็ว', q3: 'Q3 · คุณภาพงาน' };
+  document.getElementById('scoreSection').innerHTML = ['q1','q2','q3'].map(k =>
+    scoreBar(qNames[k], (q[k]?.avg||0).toFixed(1), 5)
+  ).join('');
+
+  // Improvements
+  const imps = (d.improvement_breakdown || []).filter(i => i.label !== 'ไม่มีสิ่งที่ควรปรับปรุง' && i.count > 0)
+    .sort((a,b) => b.count - a.count).slice(0,5);
+  const maxImp = Math.max(...imps.map(i => i.count), 1);
+  document.getElementById('improveSection').innerHTML = imps.length ? imps.map(i =>
+    `<div class="imp-item">
+      <span class="imp-lbl">${i.label}</span>
+      <div class="imp-bar-wrap"><div class="imp-bar" style="width:${(i.count/maxImp*100).toFixed(0)}%"></div></div>
+      <span class="imp-pct">${i.percent}%</span>
+    </div>`
+  ).join('') : '<div style="color:var(--text-3);font-size:12px;padding:8px 0">ไม่มีข้อมูล</div>';
+
+  // Survey Table
+  const tbody = document.getElementById('surveyTable');
+  const surveys = d.recent_surveys || [];
+  if (!surveys.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px">ยังไม่มีข้อมูล</td></tr>';
+  } else {
+    tbody.innerHTML = surveys.map(s => {
+      const a = avg3(s);
+      return `<tr>
+        <td><div style="font-weight:500;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.customer_name||'–'}</div><div class="td2">${s.project_name||''}</div></td>
+        <td><div>${s.employee_name||'–'}</div><div class="td2">${s.employee_id||''}</div></td>
+        <td>${s.score_q1||0}</td>
+        <td>${s.score_q2||0}</td>
+        <td>${s.score_q3||0}</td>
+        <td><span class="pill ${pillClass(a)}">${a.toFixed(1)}</span>${stars(a)}</td>
+        <td><span class="pill ${s.pdpa_consent_1==='ยินยอม'?'pill-consent':'pill-no'}">${s.pdpa_consent_1||'–'}</span></td>
+        <td style="color:var(--text-3);white-space:nowrap;font-size:12px">${fmtDate(s.submitted_at)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Emp Rank
+  const emps = (d.by_employee || []).sort((a,b) => b.count - a.count).slice(0,8);
+  document.getElementById('empRank').innerHTML = emps.length ? emps.map((e,i) => {
+    const ini = (e.employee_name||'?').split(' ').map(w=>w[0]).join('').slice(0,2);
+    return `<div class="rank-item">
+      <span class="rank-n">${i+1}</span>
+      <div class="rank-av">${ini}</div>
+      <div style="flex:1"><div class="rank-name">${e.employee_name||e.employee_id}</div><div class="rank-sub">${e.employee_id} · avg ${e.avg_score}</div></div>
+      <div class="rank-cnt">${e.count}<div class="rank-sub">surveys</div></div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text-3);font-size:12px">ไม่มีข้อมูล</div>';
+
+  // Feedback
+  const fb = d.recent_feedback || [];
+  document.getElementById('feedbackSection').innerHTML = fb.length ? fb.map(f =>
+    `<div style="padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;color:var(--text)">"${f.text}"</div>
+      <div class="td2" style="margin-top:3px">${f.customer_name} · ${fmtDate(f.submitted_at)}</div>
+    </div>`
+  ).join('') : '<div style="color:var(--text-3);font-size:12px;padding:8px 0">ไม่มีความคิดเห็นเพิ่มเติม</div>';
+
+  // Pending
+  const pending = (d.pending_customers || []).slice(0,10);
+  document.getElementById('pendingSection').innerHTML = pending.length ? pending.map(p =>
+    `<div class="pend-item">
+      <div class="pend-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div style="flex:1">
+        <div class="pend-name">${p.customer_name}</div>
+        <div class="pend-sub">${p.employee_name} · ${p.project_name}</div>
+      </div>
+      <span class="pend-status ${p.status==='สแกนแล้วยังไม่ตอบ'?'pend-scan':'pend-none'}">${p.status}</span>
+    </div>`
+  ).join('') : '<div style="color:var(--good);font-size:12px;padding:8px 0">ลูกค้าทุกคนตอบแบบสำรวจแล้ว ✓</div>';
+
+  // Last updated
+  document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok' });
+}
+
+function generateDays30() {
+  const days = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
+// ── FETCH DATA ──
+async function fetchData() {
+  try {
+    const r = await fetch('/api/reports/summary');
+    if (!r.ok) throw new Error('fetch failed');
+    const d = await r.json();
+    render(d);
+  } catch (err) {
+    console.error('fetchData error:', err);
+  }
+}
+
+function refreshData() { fetchData(); }
+
+// ── WEBSOCKET ──
+let ws = null;
+let wsRetry = 1000;
+let wsRetryTimer = null;
+
+async function connectWS() {
+  try {
+    const tr = await fetch('/api/reports/ws-token');
+    if (!tr.ok) throw new Error('token failed');
+    const { token } = await tr.json();
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${location.host}/ws/dashboard?token=${token}`);
+
+    ws.onopen = () => {
+      wsRetry = 1000;
+      setLive(true);
+      console.log('[WS] Connected');
+    };
+
+    ws.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'new_survey') {
+          const d = msg.data || {};
+          showToast(`${d.employee_name || 'พนักงาน'} — ${d.customer_name || ''}`, d.project_name || '');
+          setTimeout(fetchData, 800);
+        }
+      } catch {}
+    };
+
+    ws.onclose = (e) => {
+      setLive(false);
+      if (e.code !== 4401) scheduleReconnect();
+    };
+
+    ws.onerror = () => { ws && ws.close(); };
+
+  } catch {
+    setLive(false);
+    scheduleReconnect();
+  }
+}
+
+function scheduleReconnect() {
+  clearTimeout(wsRetryTimer);
+  wsRetryTimer = setTimeout(() => connectWS(), wsRetry);
+  wsRetry = Math.min(wsRetry * 1.5, 30000);
+}
+
+function setLive(on) {
+  const dot = document.getElementById('liveDot');
+  const txt = document.getElementById('liveText');
+  dot.className = 'dot' + (on ? ' pulse' : ' off');
+  txt.textContent = on ? 'Live' : 'ออฟไลน์';
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(title, sub) {
+  document.getElementById('toastTitle').textContent = '📋 แบบสำรวจใหม่: ' + title;
+  document.getElementById('toastSub').textContent = sub;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 5000);
+}
+
+// ── EXPORT CSV ──
+function exportCsv() { window.location.href = '/api/reports/export-csv'; }
+
+// ── INIT ──
+fetchData();
+connectWS();
+</script>
 </body>
 </html>

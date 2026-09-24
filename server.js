@@ -132,9 +132,11 @@ module.exports = app;
 
 // Only listen locally if run directly
 if (require.main === module) {
-    app.listen(PORT, '0.0.0.0', () => {
+    const wsServer = require('./ws-server');
+    const httpServer = app.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 Sales Tracking Server is running on port ${PORT}`);
         console.log(`🌍 URL: http://localhost:${PORT}/`);
         console.log(`🔒 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+    wsServer.init(httpServer);
 }

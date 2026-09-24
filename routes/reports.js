@@ -9,17 +9,28 @@ router.use(basicAuth({
     realm: 'SST Dashboard'
 }));
 
+router.get('/ws-token', (req, res) => {
+    try {
+        const wsServer = require('../ws-server');
+        res.json({ token: wsServer.issueToken() });
+    } catch {
+        res.status(503).json({ error: 'WebSocket not available' });
+    }
+});
+
 router.get('/summary', async (req, res) => {
     try {
-        const [qrRes, surveyRes, eventRes] = await Promise.all([
+        const [qrRes, surveyRes, eventRes, dailyRes] = await Promise.all([
             pool.query('SELECT * FROM qr_logs ORDER BY created_at DESC'),
             pool.query('SELECT * FROM survey_results ORDER BY submitted_at DESC'),
-            pool.query('SELECT * FROM events ORDER BY timestamp DESC')
+            pool.query('SELECT * FROM events ORDER BY timestamp DESC'),
+            pool.query(`SELECT TO_CHAR(submitted_at AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD') AS day, COUNT(*)::int AS count FROM survey_results WHERE submitted_at >= NOW() - INTERVAL '30 days' GROUP BY day ORDER BY day`)
         ]);
 
         const qrLogs  = qrRes.rows;
         const surveys = surveyRes.rows;
         const events  = eventRes.rows;
+        const dailyCounts = dailyRes.rows;
 
         const qrCreated = qrLogs.length;
         const surveyCompleted = surveys.length;
@@ -123,13 +134,30 @@ router.get('/summary', async (req, res) => {
                 text: s.improvements_other
             }));
 
+        const recentSurveys = surveys.slice(0, 30).map(s => ({
+            submitted_at: s.submitted_at,
+            employee_id: s.employee_id,
+            employee_name: s.employee_name,
+            project_name: s.project_name,
+            customer_name: s.customer_name,
+            score_q1: s.score_q1,
+            score_q2: s.score_q2,
+            score_q3: s.score_q3,
+            pdpa_consent_1: s.pdpa_consent_1,
+            improvements: s.improvements,
+            contact_name: s.contact_name,
+            contact_phone: s.contact_phone
+        }));
+
         res.json({
             totals: { qr_created: qrCreated, survey_completed: surveyCompleted, response_rate: responseRate, avg_score: avgScore, overall_distribution: overallDistribution, overall_total_scores: allScores.length },
             by_employee: byEmployee,
             pending_customers: pendingCustomers,
             avg_per_question: avgPerQuestion,
             improvement_breakdown: improvementBreakdown,
-            recent_feedback: recentFeedback
+            recent_feedback: recentFeedback,
+            recent_surveys: recentSurveys,
+            daily_counts: dailyCounts
         });
     } catch (err) {
         console.error('Dashboard summary error:', err);
