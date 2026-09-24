@@ -20,17 +20,41 @@ router.get('/ws-token', (req, res) => {
 
 router.get('/summary', async (req, res) => {
     try {
-        const [qrRes, surveyRes, eventRes, dailyRes] = await Promise.all([
+        // date range filter: days=1|7|30|180|365|all (default all)
+        const daysParam = req.query.days;
+        const employeeId = req.query.employee_id || '';
+        let dateFilter = '';
+        let dateArgs = [];
+        let chartDays = 30;
+        if (daysParam && daysParam !== 'all') {
+            const n = parseInt(daysParam, 10);
+            if (!isNaN(n) && n > 0) {
+                dateFilter = `AND submitted_at >= NOW() - INTERVAL '${n} days'`;
+                chartDays = Math.min(n, 365);
+            }
+        }
+        let empFilter = '';
+        let empArgs = [];
+        if (employeeId) {
+            empFilter = `AND employee_id = $1`;
+            empArgs = [employeeId];
+        }
+        const surveyWhere = `WHERE 1=1 ${dateFilter} ${empFilter}`;
+        const surveyArgs = empArgs;
+
+        const [qrRes, surveyRes, eventRes, dailyRes, empListRes] = await Promise.all([
             pool.query('SELECT * FROM qr_logs ORDER BY created_at DESC'),
-            pool.query('SELECT * FROM survey_results ORDER BY submitted_at DESC'),
+            pool.query(`SELECT * FROM survey_results ${surveyWhere} ORDER BY submitted_at DESC`, surveyArgs),
             pool.query('SELECT * FROM events ORDER BY timestamp DESC'),
-            pool.query(`SELECT TO_CHAR(submitted_at AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD') AS day, COUNT(*)::int AS count FROM survey_results WHERE submitted_at >= NOW() - INTERVAL '30 days' GROUP BY day ORDER BY day`)
+            pool.query(`SELECT TO_CHAR(submitted_at AT TIME ZONE 'Asia/Bangkok','YYYY-MM-DD') AS day, COUNT(*)::int AS count FROM survey_results WHERE submitted_at >= NOW() - INTERVAL '${chartDays} days' ${empFilter} GROUP BY day ORDER BY day`, empArgs),
+            pool.query(`SELECT DISTINCT employee_id, employee_name FROM survey_results ORDER BY employee_name`)
         ]);
 
         const qrLogs  = qrRes.rows;
         const surveys = surveyRes.rows;
         const events  = eventRes.rows;
         const dailyCounts = dailyRes.rows;
+        const employeeList = empListRes.rows;
 
         const qrCreated = qrLogs.length;
         const surveyCompleted = surveys.length;
@@ -157,7 +181,8 @@ router.get('/summary', async (req, res) => {
             improvement_breakdown: improvementBreakdown,
             recent_feedback: recentFeedback,
             recent_surveys: recentSurveys,
-            daily_counts: dailyCounts
+            daily_counts: dailyCounts,
+            employee_list: employeeList
         });
     } catch (err) {
         console.error('Dashboard summary error:', err);

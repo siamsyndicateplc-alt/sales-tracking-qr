@@ -155,6 +155,17 @@ tbody td{padding:9px 10px;vertical-align:middle}
 
 /* LAST UPDATED */
 .last-upd{font-size:11px;color:var(--text-3);text-align:right;margin-bottom:10px}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.filter-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.filter-lbl{font-size:12px;color:var(--text-3);font-weight:500;white-space:nowrap}
+.filter-btn{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text-2);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--primary);color:var(--primary)}
+.filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.filter-sep{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.filter-select{padding:4px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;outline:none;max-width:180px}
+.filter-select:focus{border-color:var(--primary)}
 </style>
 </head>
 <body>
@@ -184,6 +195,24 @@ tbody td{padding:9px 10px;vertical-align:middle}
 </div>
 
 <div class="main">
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <span class="filter-lbl">ช่วงเวลา:</span>
+    <div class="filter-group">
+      <button class="filter-btn" data-days="1" onclick="setDays(this)">วันนี้</button>
+      <button class="filter-btn" data-days="7" onclick="setDays(this)">7 วัน</button>
+      <button class="filter-btn active" data-days="30" onclick="setDays(this)">30 วัน</button>
+      <button class="filter-btn" data-days="180" onclick="setDays(this)">6 เดือน</button>
+      <button class="filter-btn" data-days="365" onclick="setDays(this)">1 ปี</button>
+      <button class="filter-btn" data-days="all" onclick="setDays(this)">ทั้งหมด</button>
+    </div>
+    <div class="filter-sep"></div>
+    <span class="filter-lbl">พนักงาน:</span>
+    <select class="filter-select" id="empFilter" onchange="setEmployee(this)">
+      <option value="">— ทุกคน —</option>
+    </select>
+  </div>
+
   <div class="last-upd">อัปเดตล่าสุด: <span id="lastUpdated">–</span></div>
 
   <!-- KPI -->
@@ -416,12 +445,40 @@ function generateDays30() {
   return days;
 }
 
+// ── FILTER STATE ──
+let activeDays = '30';
+let activeEmployee = '';
+
+function setDays(btn) {
+  document.querySelectorAll('.filter-btn[data-days]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeDays = btn.dataset.days;
+  fetchData();
+}
+
+function setEmployee(sel) {
+  activeEmployee = sel.value;
+  fetchData();
+}
+
+function populateEmpDropdown(list) {
+  const sel = document.getElementById('empFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— ทุกคน —</option>' +
+    (list || []).map(e => `<option value="${e.employee_id}" ${e.employee_id===cur?'selected':''}>${e.employee_name||e.employee_id}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
 // ── FETCH DATA ──
 async function fetchData() {
   try {
-    const r = await fetch('/api/reports/summary');
+    const params = new URLSearchParams();
+    if (activeDays !== 'all') params.set('days', activeDays);
+    if (activeEmployee) params.set('employee_id', activeEmployee);
+    const r = await fetch('/api/reports/summary?' + params.toString());
     if (!r.ok) throw new Error('fetch failed');
     const d = await r.json();
+    if (d.employee_list) populateEmpDropdown(d.employee_list);
     render(d);
   } catch (err) {
     console.error('fetchData error:', err);
@@ -455,7 +512,8 @@ async function connectWS() {
         if (msg.type === 'new_survey') {
           const d = msg.data || {};
           showToast(`${d.employee_name || 'พนักงาน'} — ${d.customer_name || ''}`, d.project_name || '');
-          setTimeout(fetchData, 800);
+          // re-fetch only if the new survey matches current employee filter
+          if (!activeEmployee || activeEmployee === d.employee_id) setTimeout(fetchData, 800);
         }
       } catch {}
     };
