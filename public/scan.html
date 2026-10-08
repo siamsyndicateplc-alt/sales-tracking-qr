@@ -129,76 +129,13 @@
         return;
       }
 
-      // Check if running inside LINE or Facebook WebViews (In-App Browsers)
+      // Android in-app browser: redirect to Chrome
       const inAppApp = window.InAppBrowser && window.InAppBrowser.detect();
-      if (inAppApp) {
-        if (window.InAppBrowser.isAndroid()) {
-          // Android Webview: redirect directly to Chrome
-          window.InAppBrowser.openInExternalBrowser();
-          return;
-        } else if (window.InAppBrowser.isIOS()) {
-          // iOS Webview: Show friendly visual guide to open in Safari
-          const loadingContainer = document.getElementById('loading-container');
-          const webviewWarning = document.getElementById('webview-warning');
-          const detectedAppSpan = document.getElementById('detected-app');
-          
-          if (loadingContainer) loadingContainer.style.display = 'none';
-          if (webviewWarning) {
-            webviewWarning.style.display = 'block';
-            if (detectedAppSpan) detectedAppSpan.textContent = inAppApp;
-          }
-
-          const copyBtn = document.getElementById('btn-copy-link');
-          if (copyBtn) {
-            const copySuccess = (btn) => {
-              btn.textContent = 'คัดลอกลิงก์สำเร็จแล้ว!';
-              btn.style.background = '#059669';
-              setTimeout(() => {
-                btn.textContent = 'คัดลอกลิงก์เพื่อไปเปิดเอง';
-                btn.style.background = '#10B981';
-              }, 2000);
-            };
-
-            const fallbackCopy = (text, btn) => {
-              const tempInput = document.createElement('input');
-              tempInput.value = text;
-              tempInput.style.position = 'absolute';
-              tempInput.style.left = '-9999px';
-              document.body.appendChild(tempInput);
-              tempInput.select();
-              tempInput.setSelectionRange(0, 99999);
-              
-              let success = false;
-              try {
-                success = document.execCommand('copy');
-              } catch (err) {
-                success = false;
-              }
-              document.body.removeChild(tempInput);
-              
-              if (success) {
-                copySuccess(btn);
-              } else {
-                window.prompt('กรุณาคัดลอกลิงก์ด้านล่างนี้ไปวางในเบราว์เซอร์ Safari:', text);
-              }
-            };
-
-            copyBtn.addEventListener('click', () => {
-              const url = window.location.href;
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(() => {
-                  copySuccess(copyBtn);
-                }).catch(() => {
-                  fallbackCopy(url, copyBtn);
-                });
-              } else {
-                fallbackCopy(url, copyBtn);
-              }
-            });
-          }
-          return; // Stop automatic loading and redirect for iOS in-app browser
-        }
+      if (inAppApp && window.InAppBrowser.isAndroid()) {
+        window.InAppBrowser.openInExternalBrowser();
+        return;
       }
+      // iOS in-app browser (LINE/FB): proceed normally — survey works fine
 
       // 1. ตรวจสอบซ้ำ — ถ้าเคยทำแล้ว redirect ไป survey.html step4 (completed)
       const completedKey = 'sst_completed_project_' + project;
