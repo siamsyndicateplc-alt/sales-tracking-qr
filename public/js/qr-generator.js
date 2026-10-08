@@ -1065,8 +1065,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isInApp = window.InAppBrowser && window.InAppBrowser.detect();
 
-            // iOS: skip file share (often fails), go straight to URL share
+            // iOS in LINE/FB browser: Web Share API blocked — just copy link
+            if (isIOS && isInApp) {
+                try {
+                    await navigator.clipboard.writeText(generatedSurveyUrl);
+                    showToast('คัดลอกลิงก์สำเร็จแล้ว! — ไปวางใน LINE ได้เลย', 3500);
+                } catch {
+                    fallbackCopyText(generatedSurveyUrl);
+                }
+                return;
+            }
+
+            // iOS Safari (not in-app): use Web Share API
             if (isIOS) {
                 try {
                     if (navigator.share) {
@@ -1080,12 +1092,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 } catch (err) {
                     if (err && err.name === 'AbortError') return;
-                    // Fallback: copy + show URL in prompt so user can copy manually
                     try {
                         await navigator.clipboard.writeText(generatedSurveyUrl);
                         showToast('คัดลอกลิงก์สำเร็จแล้ว!', 3000);
                     } catch {
-                        window.prompt('คัดลอกลิงก์นี้:', generatedSurveyUrl);
+                        fallbackCopyText(generatedSurveyUrl);
                     }
                 }
                 return;
