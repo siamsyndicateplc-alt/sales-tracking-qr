@@ -18,7 +18,8 @@ function fixUrl(url) {
 
 function buildShortUrl(token) {
     const base = process.env.QR_REDIRECT_BASE_URL || '';
-    const origin = base ? base.replace('/scan.html', '') : '';
+    // Strip everything from /scan.html onward to get clean origin
+    const origin = base ? base.replace(/\/scan\.html.*$/, '').replace(/\/$/, '') : '';
     return `${origin}/s/${token}`;
 }
 
