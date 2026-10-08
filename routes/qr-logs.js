@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+
+function generateToken() {
+    return crypto.randomBytes(5).toString('hex'); // 10 chars e.g. "a3f9b2c1d4"
+}
 
 function fixUrl(url) {
     if (!url) return url;
@@ -10,6 +15,30 @@ function fixUrl(url) {
     }
     return url;
 }
+
+function buildShortUrl(token) {
+    const base = process.env.QR_REDIRECT_BASE_URL || '';
+    const origin = base ? base.replace('/scan.html', '') : '';
+    return `${origin}/s/${token}`;
+}
+
+// Resolve token → return emp/project/customer data
+router.get('/resolve/:token', async (req, res) => {
+    const { token } = req.params;
+    if (!token) return res.status(400).json({ error: 'Missing token' });
+    try {
+        const pool = require('../db/pg-client');
+        const { rows } = await pool.query(
+            'SELECT employee_id, employee_name, project_name, customer_name FROM qr_logs WHERE scan_token = $1 LIMIT 1',
+            [token]
+        );
+        if (!rows.length) return res.status(404).json({ error: 'Invalid or expired QR code' });
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Resolve token failed:', err);
+        res.status(500).json({ error: 'Failed to resolve token' });
+    }
+});
 
 router.post('/', async (req, res) => {
     const { employee_id, employee_name, project_name, customer_name, generated_url } = req.body;
@@ -24,34 +53,42 @@ router.post('/', async (req, res) => {
             if (project_name) {
                 const { rows } = await pool.query('SELECT * FROM qr_logs WHERE project_name = $1 LIMIT 1', [project_name]);
                 if (rows.length > 0) {
-                    const row = { ...rows[0], generated_url: fixUrl(rows[0].generated_url) };
-                    return res.json({ already_exists: true, ...row });
+                    const row = rows[0];
+                    const token = row.scan_token;
+                    const shortUrl = token ? buildShortUrl(token) : fixUrl(row.generated_url);
+                    return res.json({ already_exists: true, ...row, short_url: shortUrl });
                 }
             }
+            const token = generateToken();
+            const shortUrl = buildShortUrl(token);
             const { rows } = await pool.query(
-                `INSERT INTO qr_logs (employee_id, employee_name, project_name, customer_name, generated_url, user_agent)
-                 VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, created_at`,
-                [employee_id, employee_name, project_name||'', customer_name||'', generated_url||'', req.headers['user-agent']||'']
+                `INSERT INTO qr_logs (employee_id, employee_name, project_name, customer_name, generated_url, scan_token, user_agent)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, created_at, scan_token`,
+                [employee_id, employee_name, project_name||'', customer_name||'', generated_url||'', token, req.headers['user-agent']||'']
             );
-            return res.json({ id: rows[0].id, created_at: rows[0].created_at });
+            return res.json({ id: rows[0].id, created_at: rows[0].created_at, scan_token: token, short_url: shortUrl });
         } else {
             const { supabase, insertRow } = require('../db/supabase-client');
             const { randomUUID } = require('crypto');
             if (project_name) {
                 const { data: existing } = await supabase.from('qr_logs').select('*').eq('project_name', project_name).limit(1);
                 if (existing && existing.length > 0) {
-                    const row = { ...existing[0], generated_url: fixUrl(existing[0].generated_url) };
-                    return res.json({ already_exists: true, ...row });
+                    const row = existing[0];
+                    const token = row.scan_token;
+                    const shortUrl = token ? buildShortUrl(token) : fixUrl(row.generated_url);
+                    return res.json({ already_exists: true, ...row, short_url: shortUrl });
                 }
             }
             const id = randomUUID();
             const created_at = new Date().toISOString();
+            const token = generateToken();
+            const shortUrl = buildShortUrl(token);
             await insertRow('qr_logs', {
                 id, created_at, employee_id, employee_name,
                 project_name: project_name||'', customer_name: customer_name||'',
-                generated_url: generated_url||'', user_agent: req.headers['user-agent']||''
+                generated_url: generated_url||'', scan_token: token, user_agent: req.headers['user-agent']||''
             });
-            return res.json({ id, created_at });
+            return res.json({ id, created_at, scan_token: token, short_url: shortUrl });
         }
     } catch (err) {
         console.error('QR log failed:', err);

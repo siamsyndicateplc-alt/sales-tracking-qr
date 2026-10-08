@@ -682,9 +682,12 @@ async function createAndDisplayQR(data) {
 
             if (response.ok) {
                 const resData = await response.json();
+                // Use short URL if returned, otherwise fallback to long URL
+                if (resData.short_url) {
+                    finalUrl = resData.short_url;
+                }
                 if (resData.already_exists) {
                     isDuplicate = true;
-                    finalUrl = tempUrl;
                     displayData = {
                         empId: resData.employee_id || data.empId,
                         empName: resData.employee_name || data.empName,

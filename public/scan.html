@@ -88,13 +88,38 @@
 
     (async function() {
       const params = new URLSearchParams(window.location.search);
-      const empId = sanitizeString(params.get('emp_id'));
-      const empName = sanitizeString(params.get('emp_name'));
-      const project = sanitizeString(params.get('project'));
-      const customer = sanitizeString(params.get('customer'));
       const statusEl = document.getElementById('scanStatus');
       const errorEl = document.getElementById('scanError');
       const spinner = document.getElementById('scanSpinner');
+
+      let empId, empName, project, customer;
+
+      // New: short token mode
+      const shortToken = params.get('t');
+      if (shortToken) {
+        statusEl.textContent = 'กำลังโหลดข้อมูล...';
+        try {
+          const r = await fetchWithTimeout(`/api/qr-logs/resolve/${encodeURIComponent(shortToken)}`, { timeout: 6000 });
+          if (!r.ok) throw new Error('not found');
+          const d = await r.json();
+          empId = d.employee_id;
+          empName = d.employee_name;
+          project = d.project_name;
+          customer = d.customer_name;
+        } catch {
+          errorEl.hidden = false;
+          errorEl.textContent = 'QR Code นี้ไม่ถูกต้องหรือหมดอายุแล้ว กรุณาขอ QR Code ใหม่จากเจ้าหน้าที่';
+          statusEl.hidden = true;
+          if (spinner) spinner.style.display = 'none';
+          return;
+        }
+      } else {
+        // Legacy: long URL with params
+        empId = sanitizeString(params.get('emp_id'));
+        empName = sanitizeString(params.get('emp_name'));
+        project = sanitizeString(params.get('project'));
+        customer = sanitizeString(params.get('customer'));
+      }
 
       if (!empId || !empName || !project || !customer) {
         errorEl.hidden = false;

@@ -106,6 +106,13 @@ app.get('/api/config/qr-base', (req, res) => {
     res.json({ baseUrl: `${protocol}://${host}/scan.html` });
 });
 
+// Short QR URL redirect: /s/:token → /scan.html?t=token
+app.get('/s/:token', (req, res) => {
+    const token = req.params.token.replace(/[^a-f0-9]/gi, '').slice(0, 10);
+    if (!token) return res.redirect('/');
+    res.redirect(302, `/scan.html?t=${token}`);
+});
+
 // Fallback for non-existent public files or APIs
 app.use((req, res) => {
     if (req.accepts('html')) {
