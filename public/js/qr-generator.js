@@ -1064,6 +1064,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+            // iOS: skip file share (often fails), go straight to URL share
+            if (isIOS) {
+                try {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: 'QR Code แบบประเมิน',
+                            text: shareText,
+                            url: generatedSurveyUrl
+                        });
+                    } else {
+                        throw new Error('no share');
+                    }
+                } catch (err) {
+                    if (err && err.name === 'AbortError') return;
+                    // Fallback: copy + show URL in prompt so user can copy manually
+                    try {
+                        await navigator.clipboard.writeText(generatedSurveyUrl);
+                        showToast('คัดลอกลิงก์สำเร็จแล้ว!', 3000);
+                    } catch {
+                        window.prompt('คัดลอกลิงก์นี้:', generatedSurveyUrl);
+                    }
+                }
+                return;
+            }
+
+            // Android / Desktop: try file share first, then URL share
             try {
                 showToast('กำลังเตรียมรูปภาพเพื่อแชร์...', 1000);
                 const targetFrame = document.querySelector('.qr-dashed-frame');
@@ -1076,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const blob = await new Promise(resolve => canvasFrame.toBlob(resolve, 'image/png'));
                 const file = new File([blob], 'SST_QR_Survey.png', { type: 'image/png' });
 
-                if (window.InAppBrowser?.canShareFiles() && navigator.canShare({ files: [file] })) {
+                if (window.InAppBrowser?.canShareFiles() && navigator.canShare && navigator.canShare({ files: [file] })) {
                     await navigator.share({
                         files: [file],
                         title: 'QR Code แบบประเมิน',
