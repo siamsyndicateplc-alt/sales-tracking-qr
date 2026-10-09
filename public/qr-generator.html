@@ -135,7 +135,7 @@
       display: flex;
       justify-content: center;
     }
-    .qr-card {
+    .qr-card, .result-card {
       background: #fff;
       border-radius: 24px;
       padding: 24px 20px;
@@ -841,9 +841,10 @@
 
         <button type="submit" class="btn-create-qr">สร้าง QR Code</button>
       </form>
+    </div>
 
-      <!-- ── QR Display ── -->
-      <div id="qr-section" style="display:none">
+    <!-- ── QR Display ── -->
+    <div class="result-card" id="qr-section" hidden>
         <div class="qr-status-bar">
           <div id="qr-status-badge">
             <div id="qr-status-dot"></div>
@@ -888,8 +889,8 @@
         <button id="btn-reset">สร้าง QR Code ใหม่</button>
       </div>
 
-      <!-- Waiting / Completed states (sibling to qr-section) -->
-      <div id="scan-waiting-section" hidden>
+    <!-- Waiting / Completed states -->
+    <div class="result-card" id="scan-waiting-section" hidden>
         <div class="waiting-info-card">
           <div class="waiting-info-row"><span>ชื่อเซลส์:</span><span id="waiting-display-emp">-</span></div>
           <div class="waiting-info-row"><span>JOB-Number:</span><span id="waiting-display-job">-</span></div>
@@ -910,7 +911,6 @@
           <p>ลูกค้าทำแบบสอบถามและส่งข้อมูลแล้ว<br>ขอบคุณสำหรับการใช้งานระบบ</p>
           <button class="btn-done">ส่งแบบประเมินเรียบร้อยแล้ว!</button>
         </div>
-      </div>
     </div>
   </div>
 </div>
