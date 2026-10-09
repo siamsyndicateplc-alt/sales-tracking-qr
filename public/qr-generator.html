@@ -886,29 +886,29 @@
           คัดลอกลิงก์
         </button>
         <button id="btn-reset">สร้าง QR Code ใหม่</button>
+      </div>
 
-        <!-- Waiting / Completed states -->
-        <div id="scan-waiting-section" hidden>
-          <div class="waiting-info-card">
-            <div class="waiting-info-row"><span>ชื่อเซลส์:</span><span id="waiting-display-emp">-</span></div>
-            <div class="waiting-info-row"><span>JOB-Number:</span><span id="waiting-display-job">-</span></div>
-            <div class="waiting-info-row"><span>ลูกค้า/โครงการ:</span><span id="waiting-display-customer">-</span></div>
-          </div>
+      <!-- Waiting / Completed states (sibling to qr-section) -->
+      <div id="scan-waiting-section" hidden>
+        <div class="waiting-info-card">
+          <div class="waiting-info-row"><span>ชื่อเซลส์:</span><span id="waiting-display-emp">-</span></div>
+          <div class="waiting-info-row"><span>JOB-Number:</span><span id="waiting-display-job">-</span></div>
+          <div class="waiting-info-row"><span>ลูกค้า/โครงการ:</span><span id="waiting-display-customer">-</span></div>
+        </div>
 
-          <div id="waiting-state-waiting" hidden>
-            <p style="font-size:13px;color:#6B7280;text-align:center;">กำลังรอลูกค้าสแกน QR Code...</p>
+        <div id="waiting-state-waiting" hidden>
+          <p style="font-size:13px;color:#6B7280;text-align:center;">กำลังรอลูกค้าสแกน QR Code...</p>
+        </div>
+        <div id="waiting-state-scanned" hidden>
+          <p id="waiting-scanned-desc" style="font-size:13px;color:#6B7280;text-align:center;">ลูกค้าสแกน QR Code แล้ว กำลังกรอกแบบประเมิน...</p>
+        </div>
+        <div id="waiting-state-completed" hidden>
+          <div class="success-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <div id="waiting-state-scanned" hidden>
-            <p id="waiting-scanned-desc" style="font-size:13px;color:#6B7280;text-align:center;">ลูกค้าสแกน QR Code แล้ว กำลังกรอกแบบประเมิน...</p>
-          </div>
-          <div id="waiting-state-completed" hidden>
-            <div class="success-icon">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <h2>ส่งแบบประเมินเรียบร้อยแล้ว!</h2>
-            <p>ลูกค้าทำแบบสอบถามและส่งข้อมูลแล้ว<br>ขอบคุณสำหรับการใช้งานระบบ</p>
-            <button class="btn-done">ส่งแบบประเมินเรียบร้อยแล้ว!</button>
-          </div>
+          <h2>ส่งแบบประเมินเรียบร้อยแล้ว!</h2>
+          <p>ลูกค้าทำแบบสอบถามและส่งข้อมูลแล้ว<br>ขอบคุณสำหรับการใช้งานระบบ</p>
+          <button class="btn-done">ส่งแบบประเมินเรียบร้อยแล้ว!</button>
         </div>
       </div>
     </div>
