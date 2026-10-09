@@ -100,15 +100,21 @@
         statusEl.textContent = 'กำลังโหลดข้อมูล...';
         try {
           const r = await fetchWithTimeout(`/api/qr-logs/resolve/${encodeURIComponent(shortToken)}`, { timeout: 6000 });
-          if (!r.ok) throw new Error('not found');
           const d = await r.json();
+          if (!r.ok) {
+            errorEl.hidden = false;
+            errorEl.textContent = d.error || 'QR Code นี้ไม่ถูกต้องหรือหมดอายุแล้ว กรุณาขอ QR Code ใหม่จากเจ้าหน้าที่';
+            statusEl.hidden = true;
+            if (spinner) spinner.style.display = 'none';
+            return;
+          }
           empId = d.employee_id;
           empName = d.employee_name;
           project = d.project_name;
           customer = d.customer_name;
         } catch {
           errorEl.hidden = false;
-          errorEl.textContent = 'QR Code นี้ไม่ถูกต้องหรือหมดอายุแล้ว กรุณาขอ QR Code ใหม่จากเจ้าหน้าที่';
+          errorEl.textContent = 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง';
           statusEl.hidden = true;
           if (spinner) spinner.style.display = 'none';
           return;
