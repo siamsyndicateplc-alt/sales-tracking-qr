@@ -55,13 +55,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// Protect dashboard.html
+// Protect dashboard.html and upload-jobs.html
 const basicAuth = require('express-basic-auth');
-app.use('/dashboard.html', basicAuth({
+const adminAuth = basicAuth({
     users: { [process.env.DASHBOARD_USER || 'admin']: process.env.DASHBOARD_PASS || 'sstadmin2026' },
     challenge: true,
-    realm: 'SST Dashboard'
-}));
+    realm: 'SST Admin'
+});
+app.use('/dashboard.html', adminAuth);
+app.use('/upload-jobs.html', adminAuth);
+app.use('/api/import', adminAuth);
 
 // Serve Static Files
 // Cache fonts for 1 year
@@ -78,6 +81,7 @@ const reportsRouter = require('./routes/reports');
 const eventsRouter = require('./routes/events');
 const employeesRouter = require('./routes/employees');
 const webhookRouter = require('./routes/webhook');
+const importRouter = require('./routes/import');
 
 app.use('/api/qr-logs', qrLogsRouter);
 app.use('/api/survey', surveyLimiter, surveyRouter);
@@ -85,6 +89,7 @@ app.use('/api/reports', reportsRouter);
 app.use('/api/events', eventsLimiter, eventsRouter);
 app.use('/api/employees', employeesRouter);
 app.use('/api/webhook', webhookRouter);
+app.use('/api/import', importRouter); // auth applied above via adminAuth middleware
 app.use('/api/config', configLimiter);
 
 // Config Endpoints

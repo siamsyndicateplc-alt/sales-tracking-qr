@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จัดการข้อมูล — SST Admin</title>
+  <link rel="stylesheet" href="/css/fonts.css">
+  <style>
+    :root {
+      --bg: #F4F6F9;
+      --surface: #FFFFFF;
+      --border: #E5E7EB;
+      --text: #111827;
+      --muted: #6B7280;
+      --primary: #0F6E56;
+      --primary-light: #ECFDF5;
+      --primary-hover: #0a5a44;
+      --danger: #DC2626;
+      --danger-light: #FEF2F2;
+      --warn: #D97706;
+      --warn-light: #FFFBEB;
+      --success: #10B981;
+      --success-light: #ECFDF5;
+      --radius: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0F172A; --surface: #1E293B; --border: #334155;
+        --text: #F1F5F9; --muted: #94A3B8;
+        --primary-light: #064E3B; --danger-light: #450A0A;
+        --warn-light: #451A03; --success-light: #064E3B;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #0F172A; --surface: #1E293B; --border: #334155;
+      --text: #F1F5F9; --muted: #94A3B8;
+      --primary-light: #064E3B; --danger-light: #450A0A;
+      --warn-light: #451A03; --success-light: #064E3B;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; min-height: 100vh; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 16px; font-weight: 600; color: var(--primary); }
+    header span { font-size: 13px; color: var(--muted); }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 24px; }
+    .tab-btn { flex: 1; padding: 9px 16px; border: none; border-radius: 9px; background: transparent; color: var(--muted); font-size: 14px; font-family: inherit; cursor: pointer; font-weight: 500; transition: all .15s; }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    .file-drop { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; color: var(--muted); font-size: 13px; }
+    .file-drop:hover, .file-drop.drag-over { border-color: var(--primary); background: var(--primary-light); }
+    .file-drop.has-file { border-color: var(--success); background: var(--success-light); color: var(--text); }
+    .file-drop input[type=file] { display: none; }
+    .file-drop .icon { font-size: 28px; margin-bottom: 8px; }
+    .file-name { font-weight: 500; font-size: 13px; margin-top: 4px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    @media (max-width: 600px) { .row2 { grid-template-columns: 1fr; } }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 10px; border: none; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; transition: background .15s; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:disabled { background: var(--muted); cursor: not-allowed; }
+    .btn-outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
+    .btn-outline:hover { background: var(--primary-light); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    .alert { border-radius: 10px; padding: 12px 16px; font-size: 13px; margin-bottom: 16px; }
+    .alert-success { background: var(--success-light); color: #065F46; border: 1px solid #6EE7B7; }
+    .alert-error { background: var(--danger-light); color: var(--danger); border: 1px solid #FCA5A5; }
+    .alert-warn { background: var(--warn-light); color: var(--warn); border: 1px solid #FCD34D; }
+    .preview-box { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-top: 16px; }
+    .stat-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; text-align: center; min-width: 100px; flex: 1; }
+    .stat .num { font-size: 24px; font-weight: 700; }
+    .stat .lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .stat.new .num { color: var(--primary); }
+    .stat.dup .num { color: var(--warn); }
+    .stat.skip .num { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 8px 10px; background: var(--bg); color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+    td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .badge-new { background: var(--success-light); color: #065F46; }
+    .badge-dup { background: var(--warn-light); color: var(--warn); }
+    .tbl-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    /* Employee form */
+    .form-group { margin-bottom: 14px; }
+    input[type=text] { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; transition: border-color .15s; }
+    input[type=text]:focus { border-color: var(--primary); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+    .emp-table-wrap { overflow-x: auto; }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #msgArea { min-height: 24px; }
+  </style>
+</head>
+<body>
+<header>
+  <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--primary)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  <h1>จัดการข้อมูล</h1>
+  <span>SST Admin</span>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="import">📥 นำเข้างาน (Excel)</button>
+    <button class="tab-btn" data-tab="employees">👤 จัดการพนักงาน</button>
+  </div>
+
+  <!-- TAB: IMPORT -->
+  <div id="tab-import" class="tab-pane active">
+    <div class="card">
+      <h2>อัพโหลดไฟล์ Excel</h2>
+      <div class="row2">
+        <div>
+          <label>ไฟล์ Jobs Export (.xlsx)</label>
+          <div class="file-drop" id="drop-jobs" onclick="document.getElementById('jobs_file').click()">
+            <input type="file" id="jobs_file" accept=".xlsx,.xls">
+            <div class="icon">📋</div>
+            <div>คลิกเพื่อเลือกไฟล์ หรือ ลากวางที่นี่</div>
+            <div class="file-name" id="jobs-name"></div>
+          </div>
+        </div>
+        <div>
+          <label>ไฟล์ Sales Export (.xlsx)</label>
+          <div class="file-drop" id="drop-sales" onclick="document.getElementById('sales_file').click()">
+            <input type="file" id="sales_file" accept=".xlsx,.xls">
+            <div class="icon">💼</div>
+            <div>คลิกเพื่อเลือกไฟล์ หรือ ลากวางที่นี่</div>
+            <div class="file-name" id="sales-name"></div>
+          </div>
+        </div>
+      </div>
+      <div id="msgArea"></div>
+      <button class="btn btn-outline" id="btnPreview" onclick="doPreview()">🔍 ดู Preview ก่อน Import</button>
+    </div>
+
+    <div id="previewSection" style="display:none">
+      <div class="card">
+        <h2>Preview ข้อมูลที่จะนำเข้า</h2>
+        <div class="stat-row" id="statRow"></div>
+        <div id="skippedAlert" style="display:none"></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Job Number</th><th>ชื่อลูกค้า</th><th>พนักงาน</th><th>ปี</th><th>สถานะ</th></tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary" id="btnConfirm" onclick="doConfirm()">✅ ยืนยัน Import</button>
+          <button class="btn btn-outline" onclick="resetImport()">ยกเลิก</button>
+          <span id="confirmMsg" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EMPLOYEES -->
+  <div id="tab-employees" class="tab-pane">
+    <div class="card">
+      <h2>เพิ่ม / แก้ไขพนักงาน</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>รหัสพนักงาน (emp_id) *</label>
+          <input type="text" id="f_emp_id" placeholder="เช่น EMP001">
+        </div>
+        <div class="form-group">
+          <label>ชื่อพนักงาน *</label>
+          <input type="text" id="f_emp_name" placeholder="ชื่อ นามสกุล">
+        </div>
+        <div class="form-group">
+          <label>แผนก</label>
+          <input type="text" id="f_dept" placeholder="เช่น Sale, Engineer">
+        </div>
+        <div class="form-group">
+          <label>SST ID (สำหรับ QR Generator)</label>
+          <input type="text" id="f_sst_id" placeholder="ถ้ามี">
+        </div>
+        <div class="form-group">
+          <label>Salesperson Code (จากไฟล์ Excel)</label>
+          <input type="text" id="f_sp_code" placeholder="เช่น SP001 — ใช้ map กับไฟล์ Excel">
+        </div>
+      </div>
+      <div id="empMsg" style="margin-bottom:12px;min-height:24px"></div>
+      <button class="btn btn-primary" onclick="saveEmployee()">💾 บันทึก</button>
+    </div>
+
+    <div class="card">
+      <h2>รายชื่อพนักงานทั้งหมด</h2>
+      <div id="empListWrap">
+        <div style="color:var(--muted);font-size:13px">กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'employees') loadEmployees();
+  });
+});
+
+// File drop
+function setupDrop(dropId, inputId, nameId) {
+  const drop = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+  input.addEventListener('change', () => {
+    if (input.files[0]) showFile(drop, nameId, input.files[0].name);
+  });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) { const dt = new DataTransfer(); dt.items.add(f); input.files = dt.files; showFile(drop, nameId, f.name); }
+  });
+}
+function showFile(drop, nameId, name) {
+  drop.classList.add('has-file');
+  document.getElementById(nameId).textContent = '✅ ' + name;
+}
+setupDrop('drop-jobs', 'jobs_file', 'jobs-name');
+setupDrop('drop-sales', 'sales_file', 'sales-name');
+
+// Store FormData for confirm step
+let _previewFiles = null;
+
+async function doPreview() {
+  const j = document.getElementById('jobs_file').files[0];
+  const s = document.getElementById('sales_file').files[0];
+  if (!j && !s) { showMsg('msgArea', 'warn', 'กรุณาเลือกไฟล์อย่างน้อย 1 ไฟล์'); return; }
+
+  const btn = document.getElementById('btnPreview');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังประมวลผล...';
+  showMsg('msgArea', '', '');
+  document.getElementById('previewSection').style.display = 'none';
+
+  const fd = new FormData();
+  if (j) fd.append('jobs_file', j);
+  if (s) fd.append('sales_file', s);
+  _previewFiles = fd;
+
+  try {
+    const res = await fetch('/api/import/preview', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'เกิดข้อผิดพลาด');
+    renderPreview(data);
+    document.getElementById('previewSection').style.display = 'block';
+    document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    showMsg('msgArea', 'error', e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 ดู Preview ก่อน Import';
+  }
+}
+
+function renderPreview(data) {
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat new"><div class="num">${data.new_count}</div><div class="lbl">งานใหม่</div></div>
+    <div class="stat dup"><div class="num">${data.duplicate_count}</div><div class="lbl">ซ้ำ (ข้าม)</div></div>
+    <div class="stat skip"><div class="num">${data.skipped_count}</div><div class="lbl">หา SP Code ไม่เจอ</div></div>
+    <div class="stat"><div class="num">${data.total}</div><div class="lbl">รวมทั้งหมด</div></div>
+  `;
+  if (data.skipped && data.skipped.length > 0) {
+    document.getElementById('skippedAlert').style.display = 'block';
+    document.getElementById('skippedAlert').innerHTML = `<div class="alert alert-warn">⚠️ ไม่พบ Salesperson Code ใน DB: ${data.skipped.map(s => `<b>${s.salesperson_code}</b>`).join(', ')} — ไปเพิ่มใน "จัดการพนักงาน" ก่อนแล้วค่อย Import ใหม่</div>`;
+  } else {
+    document.getElementById('skippedAlert').style.display = 'none';
+  }
+  const tbody = document.getElementById('previewBody');
+  tbody.innerHTML = data.rows.map((r, i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-weight:500">${esc(r.job_number)}</td>
+      <td>${esc(r.customer_name)}</td>
+      <td>${esc(r.emp_name)}</td>
+      <td>${esc(r.year)}</td>
+      <td><span class="badge ${r.exists ? 'badge-dup' : 'badge-new'}">${r.exists ? 'ซ้ำ' : 'ใหม่'}</span></td>
+    </tr>`).join('');
+  if (data.total > 50) {
+    tbody.innerHTML += `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:12px">... และอีก ${data.total - 50} รายการ</td></tr>`;
+  }
+  document.getElementById('confirmMsg').textContent = '';
+}
+
+async function doConfirm() {
+  if (!_previewFiles) return;
+  const btn = document.getElementById('btnConfirm');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลัง Import...';
+  document.getElementById('confirmMsg').textContent = '';
+  const j = document.getElementById('jobs_file').files[0];
+  const s = document.getElementById('sales_file').files[0];
+  const fd = new FormData();
+  if (j) fd.append('jobs_file', j);
+  if (s) fd.append('sales_file', s);
+  try {
+    const res = await fetch('/api/import/confirm', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'เกิดข้อผิดพลาด');
+    document.getElementById('previewSection').style.display = 'none';
+    showMsg('msgArea', 'success', `✅ Import สำเร็จ! เพิ่มงานใหม่ ${data.inserted} รายการ | ซ้ำ/ข้าม ${data.skipped} รายการ`);
+    resetFiles();
+  } catch (e) {
+    document.getElementById('confirmMsg').textContent = '❌ ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ ยืนยัน Import';
+  }
+}
+
+function resetImport() {
+  document.getElementById('previewSection').style.display = 'none';
+  _previewFiles = null;
+}
+function resetFiles() {
+  ['jobs_file','sales_file'].forEach(id => { document.getElementById(id).value = ''; });
+  ['jobs-name','sales-name'].forEach(id => { document.getElementById(id).textContent = ''; });
+  ['drop-jobs','drop-sales'].forEach(id => { document.getElementById(id).classList.remove('has-file'); });
+  _previewFiles = null;
+}
+
+// Employees
+async function loadEmployees() {
+  const wrap = document.getElementById('empListWrap');
+  wrap.innerHTML = '<div style="color:var(--muted);font-size:13px">กำลังโหลด...</div>';
+  try {
+    const res = await fetch('/api/import/employees');
+    const data = await res.json();
+    if (!data.length) { wrap.innerHTML = '<div style="color:var(--muted);font-size:13px">ยังไม่มีพนักงาน</div>'; return; }
+    wrap.innerHTML = `<div class="emp-table-wrap"><table>
+      <thead><tr><th>Emp ID</th><th>ชื่อ</th><th>แผนก</th><th>SST ID</th><th>SP Code</th><th></th></tr></thead>
+      <tbody>${data.map(e => `
+        <tr>
+          <td style="font-weight:500">${esc(e.emp_id)}</td>
+          <td>${esc(e.emp_name)}</td>
+          <td>${esc(e.department||'')}</td>
+          <td>${esc(e.sst_id||'')}</td>
+          <td><code style="font-size:11px;background:var(--bg);padding:2px 6px;border-radius:4px">${esc(e.salesperson_code||'')}</code></td>
+          <td><button class="btn btn-outline btn-sm" onclick="fillForm(${JSON.stringify(e)})">แก้ไข</button></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  } catch { wrap.innerHTML = '<div style="color:var(--danger);font-size:13px">โหลดข้อมูลไม่สำเร็จ</div>'; }
+}
+
+function fillForm(e) {
+  document.getElementById('f_emp_id').value = e.emp_id || '';
+  document.getElementById('f_emp_name').value = e.emp_name || '';
+  document.getElementById('f_dept').value = e.department || '';
+  document.getElementById('f_sst_id').value = e.sst_id || '';
+  document.getElementById('f_sp_code').value = e.salesperson_code || '';
+  document.getElementById('f_emp_name').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function saveEmployee() {
+  const emp_id = document.getElementById('f_emp_id').value.trim();
+  const emp_name = document.getElementById('f_emp_name').value.trim();
+  if (!emp_id || !emp_name) { showMsg('empMsg', 'error', 'กรุณากรอก Emp ID และชื่อพนักงาน'); return; }
+  try {
+    const res = await fetch('/api/import/employees', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        emp_id, emp_name,
+        department: document.getElementById('f_dept').value.trim(),
+        sst_id: document.getElementById('f_sst_id').value.trim(),
+        salesperson_code: document.getElementById('f_sp_code').value.trim()
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    showMsg('empMsg', 'success', '✅ บันทึกสำเร็จ');
+    ['f_emp_id','f_emp_name','f_dept','f_sst_id','f_sp_code'].forEach(id => document.getElementById(id).value = '');
+    loadEmployees();
+  } catch (e) {
+    showMsg('empMsg', 'error', e.message);
+  }
+}
+
+function showMsg(id, type, msg) {
+  const el = document.getElementById(id);
+  if (!msg) { el.innerHTML = ''; return; }
+  const cls = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-error' : 'alert-warn';
+  el.innerHTML = `<div class="alert ${cls}">${msg}</div>`;
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
