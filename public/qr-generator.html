@@ -1,1006 +1,526 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>แบบประเมินความพึงพอใจ — SST</title>
-  <link rel="stylesheet" href="/css/fonts.css">
-  <link rel="stylesheet" href="/css/styles.css">
-  <style>
-    /* ── Login Screen ── */
-    #login-container {
-      min-height: 100vh;
-      background: #0F6E56;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-      box-sizing: border-box;
-    }
-    .login-card {
-      background: #fff;
-      border-radius: 24px;
-      padding: 36px 28px 32px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 12px 48px rgba(0,0,0,0.22);
-    }
-    .login-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
-    .login-logo img { width: 64px; height: 64px; object-fit: contain; }
-    .login-logo h1 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #0F6E56;
-      text-align: center;
-      margin: 0;
-      line-height: 1.4;
-    }
-    .login-logo p {
-      font-size: 12px;
-      color: #6B7280;
-      margin: 0;
-      text-align: center;
-    }
-    .login-field { margin-bottom: 16px; }
-    .login-field label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 6px;
-    }
-    .login-field input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid #D1D5DB;
-      border-radius: 10px;
-      font-size: 15px;
-      font-family: inherit;
-      color: #111827;
-      background: #F9FAFB;
-      outline: none;
-      box-sizing: border-box;
-      transition: border-color .15s;
-    }
-    .login-field input:focus { border-color: #0F6E56; background: #fff; }
-    .login-name-display {
-      min-height: 20px;
-      font-size: 13px;
-      color: #9CA3AF;
-      margin-top: 6px;
-      padding-left: 2px;
-    }
-    #btn-login {
-      width: 100%;
-      padding: 14px;
-      background: #0F6E56;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background .15s;
-    }
-    #btn-login:hover { background: #0a5a44; }
-    #btn-login:disabled { background: #9CA3AF; cursor: not-allowed; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบประเมินความพึงพอใจ — SST</title>
+    <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        [hidden] { display: none !important; }
 
-    /* ── App Screen ── */
-    #app-container { display: none; }
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px 0;
-      max-width: 420px;
-      margin: 0 auto;
-    }
-    .app-header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .app-header-left img { width: 36px; height: 36px; object-fit: contain; }
-    .app-header-left span {
-      font-size: 13px;
-      font-weight: 600;
-      color: #0F6E56;
-      line-height: 1.3;
-    }
-    #btn-logout {
-      font-size: 12px;
-      font-weight: 600;
-      color: #EF4444;
-      background: #FEF2F2;
-      border: 1px solid #FECACA;
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-      transition: background .15s;
-    }
-    #btn-logout:hover { background: #FEE2E2; }
+        /* ===== Login ===== */
+        .login-wrap {
+            min-height: 100vh;
+            background: var(--primary);
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            box-sizing: border-box;
+        }
+        .login-card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 32px 24px 28px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .login-logo { width: 84px; height: auto; margin: 0 auto 14px; display: block; }
+        .login-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; line-height: 1.5; }
+        .login-subtitle { font-size: 12px; color: var(--text-secondary); margin: 0 0 24px; }
+        .form-group-login { text-align: left; }
+        .form-label-login { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+        .form-input-login {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: #fff;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color var(--transition-fast);
+        }
+        .form-input-login:focus { border-color: var(--primary); }
+        .btn-login {
+            width: 100%;
+            padding: 13px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+        .btn-login:hover { background: var(--primary-hover); }
+        .btn-login:disabled { background: #9CA3AF; cursor: not-allowed; }
 
-    .app-wrap {
-      padding: 16px 16px 40px;
-      display: flex;
-      justify-content: center;
-    }
-    .qr-card, .result-card {
-      background: #fff;
-      border-radius: 24px;
-      padding: 24px 20px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      border: 1px solid #E5E7EB;
-      box-sizing: border-box;
-    }
-    .card-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: #0F6E56;
-      margin-bottom: 4px;
-    }
-    .card-subtitle {
-      font-size: 12px;
-      color: #6B7280;
-      margin-bottom: 20px;
-    }
-    .form-field { margin-bottom: 14px; }
-    .form-field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 5px;
-    }
-    .form-field label .req { color: #EF4444; margin-left: 2px; }
-    .form-input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      color: #111827;
-      background: #F9FAFB;
-      outline: none;
-      box-sizing: border-box;
-      transition: border-color .15s;
-    }
-    .form-input:focus { border-color: #0F6E56; }
-    .form-input[readonly] {
-      background: #F3F4F6;
-      color: #6B7280;
-      cursor: default;
-    }
-    .autocomplete-list {
-      background: #fff;
-      border: 1px solid #E5E7EB;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      max-height: 180px;
-      overflow-y: auto;
-      margin-top: 4px;
-      z-index: 100;
-      position: relative;
-    }
-    .autocomplete-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 10px 14px;
-      background: none;
-      border: none;
-      font-size: 13px;
-      font-family: inherit;
-      cursor: pointer;
-      color: #374151;
-    }
-    .autocomplete-item:hover { background: #F0FDF4; }
+        /* ===== Year picker ===== */
+        .year-pick-btn {
+            padding: 11px 6px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .year-pick-btn:hover { border-color: var(--primary); }
+        .year-pick-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-    /* ── Year Filter ── */
-    #yearFilterContainer { margin-bottom: 10px; display: none; }
-    #yearTrigger {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 20px;
-      background: #fff;
-      font-size: 13px;
-      font-family: inherit;
-      color: #374151;
-      font-weight: 600;
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
-    }
-    #yearTrigger:hover { border-color: #0F6E56; color: #0F6E56; }
-    #yearTrigger svg { flex-shrink: 0; }
+        /* ===== Status badge dots ===== */
+        .status-pulse-gray { animation: dotPulse 1.5s infinite; }
+        .status-pulse-green { animation: dotPulse 1s infinite; }
+        @keyframes dotPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 
-    /* Year picker modal */
-    #yearPickerModal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      z-index: 500;
-      padding: 0 0 16px;
-    }
-    .year-picker-sheet {
-      background: #fff;
-      border-radius: 20px 20px 0 0;
-      padding: 20px 20px 32px;
-      width: 100%;
-      max-width: 420px;
-    }
-    .year-picker-sheet h3 {
-      font-size: 14px;
-      font-weight: 700;
-      color: #374151;
-      margin: 0 0 16px;
-      text-align: center;
-    }
-    .year-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    .year-pick-btn {
-      padding: 10px 4px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 14px;
-      font-family: inherit;
-      font-weight: 600;
-      color: #374151;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .year-pick-btn.active,
-    .year-pick-btn:hover {
-      background: #0F6E56;
-      border-color: #0F6E56;
-      color: #fff;
-    }
-
-    /* ── Job Select Trigger ── */
-    #jobSelectWrapper { margin-bottom: 10px; display: none; }
-    #jobSearchContainer { margin-bottom: 10px; display: none; }
-    #jobSearchInput {
-      width: 100%;
-      padding: 9px 14px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      font-size: 13px;
-      font-family: inherit;
-      color: #111827;
-      background: #F9FAFB;
-      outline: none;
-      box-sizing: border-box;
-    }
-    #jobSearchInput:focus { border-color: #0F6E56; }
-
-    #jobSelectTrigger {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 11px 14px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 13px;
-      font-family: inherit;
-      color: #374151;
-      cursor: pointer;
-      text-align: left;
-      box-sizing: border-box;
-      transition: border-color .15s;
-    }
-    #jobSelectTrigger:hover { border-color: #0F6E56; }
-    #jobSelectTriggerText { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #jobSelectTrigger svg { flex-shrink: 0; margin-left: 8px; }
-    #jobSelect { display: none; }
-    #jobNumberInput { display: none; }
-
-    /* ── Customer Info ── */
-    #customerInfo {
-      background: #F0FDF4;
-      border: 1px solid #A7F3D0;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #065F46;
-      font-weight: 600;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    #customerInfo svg { flex-shrink: 0; }
-
-    /* ── Submit button ── */
-    .btn-create-qr {
-      width: 100%;
-      padding: 14px;
-      background: #0F6E56;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background .15s;
-      margin-top: 4px;
-    }
-    .btn-create-qr:hover { background: #0a5a44; }
-    .btn-create-qr:disabled { background: #9CA3AF; cursor: not-allowed; }
-
-    /* ── QR Section ── */
-    .qr-status-bar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-    #qr-status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: #F3F4F6;
-      color: #4B5563;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid #E5E7EB;
-    }
-    #qr-status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #9CA3AF;
-      animation: pulse-gray 1.5s infinite;
-    }
-    @keyframes pulse-gray { 0%,100%{opacity:1} 50%{opacity:.4} }
-    .status-pulse-green { animation: pulse-green 1s infinite !important; }
-    @keyframes pulse-green { 0%,100%{opacity:1} 50%{opacity:.5} }
-
-    .qr-dashed-frame {
-      background: #fff;
-      border: 2px dashed #A7F3D0;
-      border-radius: 16px;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-    }
-    .qr-canvas-container {
-      position: relative;
-      width: 240px; height: 240px;
-    }
-    #qr-canvas { border-radius: 8px; }
-
-    .qr-info-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 16px;
-    }
-    .qr-info-table tr td {
-      padding: 5px 0;
-      font-size: 13px;
-      vertical-align: top;
-    }
-    .qr-info-table tr td:first-child {
-      color: #6B7280;
-      width: 120px;
-    }
-    .qr-info-table tr td:last-child {
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .qr-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    .qr-actions .btn-action {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 11px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      color: #374151;
-      transition: all .15s;
-    }
-    .qr-actions .btn-action:hover { border-color: #0F6E56; color: #0F6E56; }
-    .qr-actions .btn-action:disabled { opacity: .4; cursor: not-allowed; }
-    .btn-copy-full {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 11px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      background: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      color: #374151;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-      transition: all .15s;
-    }
-    .btn-copy-full:hover { border-color: #0F6E56; color: #0F6E56; }
-    .btn-copy-full:disabled { opacity: .4; cursor: not-allowed; }
-    #btn-reset {
-      width: 100%;
-      padding: 11px;
-      background: none;
-      border: none;
-      font-size: 13px;
-      font-family: inherit;
-      color: #9CA3AF;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-    #btn-reset:hover { color: #6B7280; }
-
-    /* ── Waiting Section ── */
-    #scan-waiting-section {
-      text-align: center;
-      padding: 16px 0;
-    }
-    .waiting-info-card {
-      background: #F9FAFB;
-      border: 1px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 16px;
-      text-align: left;
-    }
-    .waiting-info-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      padding: 3px 0;
-    }
-    .waiting-info-row span:first-child { color: #6B7280; }
-    .waiting-info-row span:last-child { font-weight: 600; color: #111827; }
-    #waiting-state-completed .success-icon {
-      width: 72px; height: 72px;
-      background: #D1FAE5;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-    }
-    #waiting-state-completed h2 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #065F46;
-      margin: 0 0 8px;
-    }
-    #waiting-state-completed p {
-      font-size: 13px;
-      color: #6B7280;
-      margin: 0 0 20px;
-      line-height: 1.5;
-    }
-    .btn-done {
-      width: 100%;
-      padding: 14px;
-      background: #1F2937;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: default;
-    }
-
-    /* ── Job Search Modal ── */
-    #jobSearchModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 600;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    #jobSearchModal.show { display: flex; }
-    .modal-sheet {
-      background: #fff;
-      border-radius: 20px 20px 0 0;
-      width: 100%;
-      max-width: 420px;
-      max-height: 80vh;
-      display: flex;
-      flex-direction: column;
-    }
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid #F3F4F6;
-    }
-    .modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; color: #111827; }
-    #closeSearchModal {
-      background: #F3F4F6;
-      border: none;
-      border-radius: 50%;
-      width: 28px; height: 28px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 16px; color: #6B7280;
-    }
-    .modal-search-wrap {
-      padding: 12px 16px;
-      position: relative;
-    }
-    #modalSearchInput {
-      width: 100%;
-      padding: 10px 36px 10px 14px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      box-sizing: border-box;
-    }
-    #modalSearchInput:focus { border-color: #0F6E56; }
-    #clearSearchInput {
-      position: absolute;
-      right: 24px; top: 50%;
-      transform: translateY(-50%);
-      background: #9CA3AF;
-      border: none; border-radius: 50%;
-      width: 18px; height: 18px;
-      color: #fff; font-size: 11px;
-      cursor: pointer; display: none;
-      align-items: center; justify-content: center;
-    }
-    #modalJobList { overflow-y: auto; padding: 0 16px 24px; flex: 1; }
-    .modal-job-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 12px 14px;
-      background: #fff;
-      border: 1px solid #F3F4F6;
-      border-radius: 10px;
-      margin-bottom: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: border-color .15s;
-    }
-    .modal-job-item:hover { border-color: #0F6E56; background: #F0FDF4; }
-    .job-item-number { font-size: 13px; font-weight: 700; color: #111827; }
-    .job-item-customer { font-size: 12px; color: #6B7280; margin-top: 2px; }
-
-    /* ── Confirm Modal ── */
-    #confirm-qr-modal {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .confirm-sheet {
-      background: #fff;
-      border-radius: 20px;
-      padding: 28px 24px;
-      width: 100%;
-      max-width: 340px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    }
-    .confirm-sheet h3 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 16px; text-align: center; }
-    .confirm-row {
-      display: flex; justify-content: space-between;
-      font-size: 13px; padding: 6px 0;
-      border-bottom: 1px solid #F3F4F6;
-    }
-    .confirm-row span:first-child { color: #6B7280; }
-    .confirm-row span:last-child { font-weight: 600; color: #111827; text-align: right; max-width: 180px; }
-    .confirm-btns { display: flex; gap: 10px; margin-top: 20px; }
-    #confirm-qr-cancel {
-      flex: 1; padding: 12px;
-      background: #F3F4F6; border: none; border-radius: 10px;
-      font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; color: #374151;
-    }
-    #confirm-qr-ok {
-      flex: 2; padding: 12px;
-      background: #0F6E56; border: none; border-radius: 10px;
-      font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; color: #fff;
-    }
-
-    /* ── Custom Prompt Modal ── */
-    #custom-prompt-modal {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
-    .prompt-sheet {
-      background: #fff;
-      border-radius: 20px;
-      padding: 28px 24px;
-      width: 100%;
-      max-width: 340px;
-    }
-    .prompt-sheet h3 { font-size: 15px; font-weight: 700; margin: 0 0 6px; color: #111827; }
-    .prompt-sheet p { font-size: 12px; color: #6B7280; margin: 0 0 16px; }
-    #custom-prompt-input {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid #E5E7EB;
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      outline: none;
-      box-sizing: border-box;
-      margin-bottom: 14px;
-    }
-    #custom-prompt-input:focus { border-color: #0F6E56; }
-    .prompt-btns { display: flex; gap: 10px; }
-    #custom-prompt-cancel {
-      flex: 1; padding: 11px;
-      background: #F3F4F6; border: none; border-radius: 10px;
-      font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; color: #374151;
-    }
-    #custom-prompt-ok {
-      flex: 2; padding: 11px;
-      background: #0F6E56; border: none; border-radius: 10px;
-      font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer; color: #fff;
-    }
-
-    /* ── Webview Banner ── */
-    #webview-banner {
-      background: #FEF3C7;
-      border-bottom: 1px solid #FCD34D;
-      padding: 10px 16px;
-      font-size: 12px;
-      color: #92400E;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    #open-in-browser-btn {
-      background: #F59E0B; border: none; border-radius: 6px;
-      padding: 6px 12px; font-size: 12px; font-weight: 700;
-      font-family: inherit; color: #fff; cursor: pointer; white-space: nowrap;
-    }
-
-    /* hidden attribute override */
-    [hidden] { display: none !important; }
-
-    /* ── Toast ── */
-    .toast-container {
-      position: fixed;
-      bottom: 32px; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #1F2937;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      opacity: 0;
-      transition: all .3s ease;
-      pointer-events: none;
-      z-index: 9999;
-      white-space: nowrap;
-      max-width: calc(100vw - 32px);
-    }
-    .toast-container.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-    .toast-container.error { background: #DC2626; }
-  </style>
+        /* ===== Waiting / scan states ===== */
+        .scan-waiting-card { text-align: center; }
+        .scan-state-block { padding: 8px 0 20px; }
+        .scan-state-icon-wrap {
+            position: relative;
+            width: 88px; height: 88px;
+            margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .scan-icon-inner {
+            width: 76px; height: 76px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative; z-index: 1;
+        }
+        .scan-icon-gray { background: #F3F4F6; color: #6B7280; }
+        .scan-icon-amber { background: #FEF3C7; color: #D97706; }
+        .scan-icon-green { background: #D1FAE5; color: #10B981; box-shadow: 0 4px 14px rgba(16, 185, 129, .2); }
+        .scan-pulse-ring {
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            animation: ringPulse 1.8s ease-out infinite;
+        }
+        .scan-pulse-ring-gray { border: 2px solid #D1D5DB; }
+        .scan-pulse-ring-amber { border: 2px solid #FCD34D; }
+        @keyframes ringPulse { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+        .scan-state-title { font-size: 17px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px; }
+        .scan-state-desc { font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.6; }
+        .waiting-job-card {
+            background: var(--bg-page);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            text-align: left;
+        }
+        .waiting-job-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 13px; }
+        .waiting-job-label { color: var(--text-secondary); flex-shrink: 0; }
+        .waiting-job-value { font-weight: 600; color: var(--text-primary); text-align: right; word-break: break-word; }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════
-     LOGIN SCREEN
-═══════════════════════════════ -->
-<div id="login-container">
-  <div class="login-card">
-    <div class="login-logo">
-      <img src="/img/sst_symbol.png" alt="SST Logo">
-      <h1>ระบบประเมินความพึงพอใจลูกค้า</h1>
-      <p>บริษัท สยามซินดิเคทเทคโนโลยี จำกัด (มหาชน)</p>
+    <!-- 🔐 หน้าต่างล็อกอินพนักงาน (Login Screen) -->
+    <div id="login-container" class="login-wrap" style="display: flex;">
+        <div class="login-card">
+            <img src="/img/company_logo.png" alt="SST" class="login-logo">
+            <h2 class="login-title">ระบบประเมินความพึงพอใจลูกค้า</h2>
+            <p class="login-subtitle">สยามซินดิเคทเทคโนโลยี จำกัด (มหาชน)</p>
+            <!-- เข้าสู่ระบบด้วยรหัสพนักงาน -->
+            <div class="form-group-login">
+                <label class="form-label-login" for="login-emp-id">รหัสพนักงาน</label>
+                <input type="text" id="login-emp-id" class="form-input-login" placeholder="กรอกรหัสพนักงาน" autocomplete="off" inputmode="numeric">
+            </div>
+            <div class="form-group-login" style="margin-top: 10px;">
+                <label class="form-label-login">ชื่อ - นามสกุล</label>
+                <div id="login-emp-name" class="form-input-login" style="display:flex; align-items:center; background:#F9FAFB; color:#0F6E56; font-weight:600; min-height:44px; cursor:default;">
+                    <span id="login-emp-name-text" style="color:#9CA3AF; font-weight:400;">ชื่อ-นามสกุล</span>
+                </div>
+            </div>
+            <button type="button" id="btn-login" class="btn-login" style="margin-top: 14px;">
+                เข้าสู่ระบบ
+            </button>
+        </div>
     </div>
 
-    <div class="login-field">
-      <label>รหัสพนักงาน <span style="color:#EF4444">*</span></label>
-      <input type="text" id="login-emp-id" placeholder="กรอกรหัสพนักงาน" autocomplete="off" inputmode="text">
-      <div class="login-name-display">
-        <span id="login-emp-name-text"></span>
+    <!-- 🌐 ส่วนเนื้อหาโปรแกรมหลัก (จะแสดงผลหลังจากล็อกอินผ่านแล้วเท่านั้น) -->
+    <div id="app-container" style="display: none;">
+        <div id="webview-banner" class="webview-banner" hidden>
+        <div class="webview-banner-content">
+            <div class="webview-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <div class="webview-text">
+                <p class="webview-title">เปิดในเบราว์เซอร์เพื่อใช้งานครบทุกฟีเจอร์</p>
+                <p class="webview-detail">บางฟังก์ชัน เช่น บันทึกรูปและแชร์ อาจไม่ทำงานในแอป <span id="webview-app-name">นี้</span></p>
+            </div>
+            <button id="open-in-browser-btn" class="webview-btn">เปิด</button>
+        </div>
+    </div>
+
+<main class="page-wrap">
+  <div class="qr-card">
+
+    <!-- Header: Logo + Logout -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; width: 100%; box-sizing: border-box;">
+      <img src="/img/company_logo.png" alt="SST" class="company-logo" style="width: 56px; height: auto; margin: 0;">
+      <button type="button" id="btn-logout" class="btn-logout-header" style="background: transparent; border: 1px solid #EF4444; color: #EF4444; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: 'Noto Sans Thai', sans-serif; outline: none; margin: 0; z-index: 50;">
+        ออกจากระบบ
+      </button>
+    </div>
+    <!-- Title & Company Name -->
+    <header class="card-header" style="display: block; margin-bottom: 24px;">
+      <div class="header-text">
+        <h1 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 6px 0; line-height: 1.5; text-align: left;">แบบสอบถามความพึงพอใจต่อการขายและบริการ</h1>
+        <p class="company-name" style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.4; text-align: left;">บริษัทสยามซินดิเคทเทคโนโลยี จำกัด (มหาชน)</p>
       </div>
-    </div>
+    </header>
 
-    <button id="btn-login">เข้าสู่ระบบ</button>
-  </div>
-</div>
+    <!-- Form -->
+    <form id="qrForm" class="qr-form" novalidate>
 
-<!-- ═══════════════════════════════
-     APP SCREEN
-═══════════════════════════════ -->
-<div id="app-container">
+      <div class="form-group" style="position: relative;">
+        <label for="empId">รหัสพนักงาน<span class="required">*</span></label>
+        <input type="text" id="empId" class="form-input" autocomplete="off" placeholder="" required>
+        <div id="empAutocompleteList" class="autocomplete-items"></div>
+      </div>
 
-  <!-- Webview Banner -->
-  <div id="webview-banner" hidden>
-    <span>กรุณาเปิดในเบราว์เซอร์เพื่อการทำงานที่ดีที่สุด (<span id="webview-app-name"></span>)</span>
-    <button id="open-in-browser-btn">เปิดเบราว์เซอร์</button>
-  </div>
+      <div class="form-group">
+        <label for="empName">ชื่อ - นามสกุล<span class="required">*</span></label>
+        <input type="text" id="empName" class="form-input" autocomplete="off" placeholder="" required>
+      </div>
 
-  <!-- Header -->
-  <div class="app-header">
-    <div class="app-header-left">
-      <img src="/img/sst_symbol.png" alt="SST">
-      <span>แบบสอบถามความพึงพอใจ<br>ต่อการขายและบริการ</span>
-    </div>
-    <button id="btn-logout">ออกจากระบบ</button>
-  </div>
+      <div class="form-group" style="position: relative;">
+        <label for="jobNumberInput">JOB-Number<span class="required">*</span></label>
 
-  <div class="app-wrap">
-    <div class="qr-card" id="form-card">
-      <div class="card-title">แบบสอบถามความพึงพอใจต่อการขายและบริการ</div>
-      <div class="card-subtitle">บริษัทสยามซินดิเคทเทคโนโลยี จำกัด (มหาชน)</div>
-
-      <form id="qrForm" autocomplete="off">
-
-        <!-- Employee ID -->
-        <div class="form-field">
-          <label>รหัสพนักงาน <span class="req">*</span></label>
-          <input type="text" id="empId" class="form-input" placeholder="รหัสพนักงาน" autocomplete="off">
-          <div id="empAutocompleteList" class="autocomplete-list" style="display:none"></div>
-        </div>
-
-        <!-- Employee Name -->
-        <div class="form-field">
-          <label>ชื่อ - นามสกุล <span class="req">*</span></label>
-          <input type="text" id="empName" class="form-input" placeholder="ชื่อ-นามสกุล" autocomplete="off">
-        </div>
-
-        <!-- Year Filter -->
-        <div id="yearFilterContainer">
-          <button type="button" id="yearTrigger">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <!-- Year Filter Trigger -->
+        <div id="yearFilterContainer" style="display: none; margin-bottom: 8px;">
+          <button type="button" id="yearTrigger" style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-card); font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); font-family: inherit; transition: all 0.2s;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span id="yearTriggerText">ทุกปี</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+        </div>
+
+        <!-- Unified Job Selector Dropdown wrapper with Trigger Button and hidden select -->
+        <div id="jobSelectWrapper" style="display: none; margin-bottom: 8px; margin-top: 4px;">
+          <select id="jobSelect" style="display: none;">
+            <option value="">-- เลือก JOB-Number / โครงการ --</option>
+          </select>
+          <button type="button" id="jobSelectTrigger" class="form-input form-select-trigger">
+            <span id="jobSelectTriggerText">-- เลือก JOB-Number / โครงการ --</span>
+            <svg class="dropdown-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
           </button>
         </div>
 
         <!-- Job Search -->
-        <div id="jobSearchContainer">
-          <input type="text" id="jobSearchInput" placeholder="ค้นหา JOB/SO หรือชื่อลูกค้า...">
+        <div id="jobSearchContainer" style="display: none; margin-bottom: 8px;">
+          <input type="text" id="jobSearchInput" class="form-input" placeholder="ค้นหา JOB/SO หรือชื่อลูกค้า..." autocomplete="off">
         </div>
 
-        <!-- Job Select Trigger -->
-        <div id="jobSelectWrapper" class="form-field">
-          <label>JOB-Number <span class="req">*</span></label>
-          <button type="button" id="jobSelectTrigger">
-            <span id="jobSelectTriggerText">-- เลือก JOB-Number / โครงการ --</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <select id="jobSelect"></select>
-        </div>
-
-        <!-- Manual Job Input (fallback) -->
-        <div class="form-field" id="manualJobField" style="display:none">
-          <label>JOB-Number <span class="req">*</span></label>
-          <input type="text" id="jobNumberInput" class="form-input" placeholder="กรอก JOB-Number">
-        </div>
-
-        <!-- Customer Info -->
-        <div id="customerInfo" hidden>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-          ลูกค้า/โครงการ: <span id="customerDisplay"></span>
-        </div>
-
-        <button type="submit" class="btn-create-qr">สร้าง QR Code</button>
-      </form>
-    </div>
-
-    <!-- ── QR Display ── -->
-    <div class="result-card" id="qr-section" hidden>
-        <div class="qr-status-bar">
-          <div id="qr-status-badge">
-            <div id="qr-status-dot"></div>
-            <span id="qr-status-text">รอการสแกน...</span>
-          </div>
-        </div>
-
-        <div class="qr-dashed-frame">
-          <div class="qr-canvas-container">
-            <canvas id="qr-canvas" width="240" height="240"></canvas>
-            <div id="qr-success-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:all .4s ease;border-radius:12px;z-index:10;">
-              <div style="width:68px;height:68px;background:#D1FAE5;color:#10B981;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-              <span style="font-size:15px;color:#065F46;font-weight:600;">ประเมินเสร็จเรียบร้อย!</span>
-              <span style="font-size:11px;color:#047857;margin-top:2px;">ขอบคุณสำหรับความพึงพอใจ</span>
-            </div>
-          </div>
-        </div>
-
-        <table class="qr-info-table">
-          <tr><td>รหัสพนักงาน:</td><td id="displayEmpId">-</td></tr>
-          <tr><td>ชื่อเซลส์:</td><td id="displayEmpName">-</td></tr>
-          <tr><td>JOB-Number:</td><td id="displayProject">-</td></tr>
-          <tr><td>ชื่อลูกค้า/โครงการ:</td><td id="displayCustomer">-</td></tr>
-        </table>
-
-        <div class="qr-actions">
-          <button class="btn-action" id="btn-save">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            บันทึกรูป
-          </button>
-          <button class="btn-action" id="btn-share">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-            แชร์
-          </button>
-        </div>
-        <button class="btn-copy-full" id="btn-copy">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          คัดลอกลิงก์
-        </button>
-        <button id="btn-reset">สร้าง QR Code ใหม่</button>
+        <input type="text" id="jobNumberInput" class="form-input" autocomplete="off" placeholder="พิมพ์เลข JOB..." style="display: none;">
+        <div id="jobAutocompleteList" class="autocomplete-items"></div>
       </div>
 
-    <!-- Waiting / Completed states -->
-    <div class="result-card" id="scan-waiting-section" hidden>
-        <div class="waiting-info-card">
-          <div class="waiting-info-row"><span>ชื่อเซลส์:</span><span id="waiting-display-emp">-</span></div>
-          <div class="waiting-info-row"><span>JOB-Number:</span><span id="waiting-display-job">-</span></div>
-          <div class="waiting-info-row"><span>ลูกค้า/โครงการ:</span><span id="waiting-display-customer">-</span></div>
+      <!-- Customer display (โผล่หลังเลือก JOB) -->
+      <div class="customer-info" id="customerInfo" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>ลูกค้า/โครงการ: <strong id="customerDisplay">-</strong></span>
+      </div>
+
+      <button type="submit" class="btn-create-qr">
+        สร้าง QR Code
+      </button>
+
+    </form>
+  </div>
+
+<!-- QR Code Section -->
+<section class="qr-display-card" id="qr-section" hidden>
+
+  <!-- Real-time Status Badge -->
+  <div style="text-align: center; margin-bottom: 16px;">
+    <div id="qr-status-badge" style="display: inline-flex; align-items: center; gap: 8px; background: #F3F4F6; border: 1px solid #E5E7EB; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; color: #4B5563; transition: all 0.3s ease;">
+      <span id="qr-status-dot" class="status-pulse-gray" style="width: 8px; height: 8px; border-radius: 50%; background: #9CA3AF; display: inline-block;"></span>
+      <span id="qr-status-text">รอการสแกน...</span>
+    </div>
+  </div>
+
+  <!-- กรอบเส้นประ ครอบ Header + QR + Info -->
+  <div class="qr-dashed-frame">
+
+    <!-- Header เล็กใน frame -->
+    <div class="qr-frame-header">
+      <img src="/img/company_logo.png" alt="SST" class="qr-frame-logo">
+      <span class="qr-frame-title">แบบสอบถามความพึงพอใจต่อการขายและบริการ</span>
+    </div>
+
+    <hr class="qr-frame-divider top">
+
+    <!-- QR Code Area -->
+    <div class="qr-canvas-container" style="position: relative;">
+            <canvas id="qr-canvas" width="240" height="240"></canvas>
+            <div id="qr-success-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.96); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: all 0.4s ease; border-radius: 12px; z-index: 10;">
+                <div style="width: 68px; height: 68px; background: #D1FAE5; color: #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <span style="font-size: 15px; color: #065F46; font-weight: 600;">ประเมินเสร็จเรียบร้อย!</span>
+                <span style="font-size: 11px; color: #047857; margin-top: 2px;">ขอบคุณสำหรับความพึงพอใจ</span>
+            </div>
         </div>
 
-        <div id="waiting-state-waiting" hidden>
-          <p style="font-size:13px;color:#6B7280;text-align:center;">กำลังรอลูกค้าสแกน QR Code...</p>
+    <hr class="qr-frame-divider bottom">
+
+    <!-- Info section -->
+    <div class="qr-info">
+      <div class="qr-info-row">
+        <span class="info-label">รหัสพนักงาน:</span>
+        <span class="info-value" id="displayEmpId">-</span>
+      </div>
+      <div class="qr-info-row">
+        <span class="info-label">ชื่อเซลล์:</span>
+        <span class="info-value" id="displayEmpName">-</span>
+      </div>
+      <div class="qr-info-row">
+        <span class="info-label">JOB-Number:</span>
+        <span class="info-value" id="displayProject">-</span>
+      </div>
+      <div class="qr-info-row">
+        <span class="info-label">ชื่อลูกค้า/โครงการ:</span>
+        <span class="info-value" id="displayCustomer">-</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ปุ่ม Actions -->
+  <div class="qr-actions">
+
+    <!-- แถวบน 2 ปุ่ม -->
+    <div class="btn-row-2">
+      <button type="button" class="btn-outline" id="btn-save">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>บันทึกรูป</span>
+      </button>
+
+      <button type="button" class="btn-outline" id="btn-share">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+          <polyline points="16 6 12 2 8 6"></polyline>
+          <line x1="12" y1="2" x2="12" y2="15"></line>
+        </svg>
+        <span>แชร์</span>
+      </button>
+    </div>
+
+    <!-- แถวล่าง 1 ปุ่มเต็มแถบ -->
+    <button type="button" class="btn-outline btn-full" id="btn-copy">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+      </svg>
+      <span>คัดลอกลิ้งค์</span>
+    </button>
+
+  </div>
+
+</section>
+
+<!-- ===== Waiting for Scan Section ===== -->
+<section class="qr-display-card scan-waiting-card" id="scan-waiting-section" hidden>
+
+  <!-- State 1: รอสแกน -->
+  <div id="waiting-state-waiting" class="scan-state-block">
+    <div class="scan-state-icon-wrap">
+      <div class="scan-pulse-ring scan-pulse-ring-gray"></div>
+      <div class="scan-icon-inner scan-icon-gray">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+          <rect x="14" y="14" width="3" height="3" rx="0.5"></rect>
+          <rect x="18" y="14" width="3" height="3" rx="0.5"></rect>
+          <rect x="14" y="18" width="3" height="3" rx="0.5"></rect>
+          <rect x="18" y="18" width="3" height="3" rx="0.5"></rect>
+        </svg>
+      </div>
+    </div>
+    <h2 class="scan-state-title">รอลูกค้าสแกน QR Code</h2>
+    <p class="scan-state-desc">ให้ลูกค้าสแกน QR Code เพื่อทำแบบสอบถาม<br>ระบบจะอัปเดตสถานะโดยอัตโนมัติ</p>
+  </div>
+
+  <!-- State 2: กำลังตอบ -->
+  <div id="waiting-state-scanned" class="scan-state-block" hidden>
+    <div class="scan-state-icon-wrap">
+      <div class="scan-pulse-ring scan-pulse-ring-amber"></div>
+      <div class="scan-icon-inner scan-icon-amber">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <line x1="10" y1="9" x2="8" y2="9"></line>
+        </svg>
+      </div>
+    </div>
+    <h2 class="scan-state-title" style="color: #92400E;">ลูกค้ากำลังตอบแบบสอบถาม</h2>
+    <p class="scan-state-desc" id="waiting-scanned-desc">ลูกค้าสแกน QR Code แล้ว<br>กำลังกรอกแบบประเมินความพึงพอใจ...</p>
+  </div>
+
+  <!-- State 3: เสร็จเรียบร้อย -->
+  <div id="waiting-state-completed" class="scan-state-block" hidden>
+    <div class="scan-state-icon-wrap">
+      <div class="scan-icon-inner scan-icon-green">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+    </div>
+    <h2 class="scan-state-title" style="color: #065F46;">ส่งแบบประเมินเรียบร้อยแล้ว!</h2>
+    <p class="scan-state-desc">ลูกค้าทำแบบสอบถามและส่งข้อมูลแล้ว<br>ขอบคุณสำหรับการใช้งานระบบ</p>
+  </div>
+
+  <!-- ข้อมูลงาน -->
+  <div class="waiting-job-card">
+    <div class="waiting-job-row">
+      <span class="waiting-job-label">ชื่อเซลล์:</span>
+      <span class="waiting-job-value" id="waiting-display-emp">-</span>
+    </div>
+    <div class="waiting-job-row">
+      <span class="waiting-job-label">JOB-Number:</span>
+      <span class="waiting-job-value" id="waiting-display-job">-</span>
+    </div>
+    <div class="waiting-job-row">
+      <span class="waiting-job-label">ลูกค้า/โครงการ:</span>
+      <span class="waiting-job-value" id="waiting-display-customer">-</span>
+    </div>
+  </div>
+
+</section>
+</main>
+
+    </div>
+
+    <!-- Reusable Black Toast Message Box -->
+    <div id="toast" class="toast-container">ข้อความแจ้งเตือน</div>
+
+    <!-- Confirm QR Modal -->
+    <div id="confirm-qr-modal" class="modal-overlay" hidden>
+        <div class="modal-card">
+            <h3 class="modal-title">ยืนยันก่อนสร้าง QR Code</h3>
+            <p class="modal-desc" style="margin-bottom: 14px; font-size: 13px; color: var(--text-secondary);">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนสร้าง</p>
+            <div style="background: #F9FAFB; border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; border: 1px solid #E5E7EB;">
+                <div style="display: grid; grid-template-columns: 90px 1fr; gap: 8px; margin-bottom: 10px;">
+                    <span style="font-size: 13px; color: var(--text-secondary);">พนักงาน</span>
+                    <span id="confirm-emp-name" style="font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: left;"></span>
+                </div>
+                <div style="display: grid; grid-template-columns: 90px 1fr; gap: 8px; margin-bottom: 10px; padding-top: 10px; border-top: 1px solid #E5E7EB;">
+                    <span style="font-size: 13px; color: var(--text-secondary);">JOB/SO Number</span>
+                    <span id="confirm-job-number" style="font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: left; word-break: break-all;"></span>
+                </div>
+                <div style="display: grid; grid-template-columns: 90px 1fr; gap: 8px; padding-top: 10px; border-top: 1px solid #E5E7EB;">
+                    <span style="font-size: 13px; color: var(--text-secondary);">ลูกค้า/โครงการ</span>
+                    <span id="confirm-customer" style="font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: left;"></span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="confirm-qr-cancel" class="btn-cancel">กลับ</button>
+                <button type="button" id="confirm-qr-ok" class="btn-ok" style="background: var(--primary);">สร้าง QR Code</button>
+            </div>
         </div>
-        <div id="waiting-state-scanned" hidden>
-          <p id="waiting-scanned-desc" style="font-size:13px;color:#6B7280;text-align:center;">ลูกค้าสแกน QR Code แล้ว กำลังกรอกแบบประเมิน...</p>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="custom-prompt-modal" class="modal-overlay" hidden>
+        <div class="modal-card">
+            <h3 class="modal-title">ข้อมูลเพิ่มเติม</h3>
+            <p class="modal-desc">กรุณากรอกชื่อลูกค้า / โครงการ สำหรับ Job Number นี้:</p>
+            <input type="text" id="custom-prompt-input" class="modal-input" placeholder="เช่น ลูกค้าบริษัท XYZ..." autocomplete="off">
+            <div class="modal-actions">
+                <button type="button" id="custom-prompt-cancel" class="btn-cancel">ยกเลิก</button>
+                <button type="button" id="custom-prompt-ok" class="btn-ok">ตกลง</button>
+            </div>
         </div>
-        <div id="waiting-state-completed" hidden>
-          <div class="success-icon">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+
+    <!-- Year Picker Modal -->
+    <div id="yearPickerModal" class="modal-overlay" hidden>
+        <div class="modal-card" style="max-width: 320px;">
+            <h3 class="modal-title" style="margin-bottom: 16px;">เลือกปี</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <button type="button" class="year-pick-btn active" data-year="all" style="grid-column: span 3;">ทุกปี</button>
+                <button type="button" class="year-pick-btn" data-year="2026">2026</button>
+                <button type="button" class="year-pick-btn" data-year="2025">2025</button>
+                <button type="button" class="year-pick-btn" data-year="2024">2024</button>
+                <button type="button" class="year-pick-btn" data-year="2023">2023</button>
+                <button type="button" class="year-pick-btn" data-year="2022">2022</button>
+                <button type="button" class="year-pick-btn" data-year="2021">2021</button>
+                <button type="button" class="year-pick-btn" data-year="2020">2020</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔍 หน้าต่างโมดอลค้นหาและเลือก JOB (Job Search Modal) -->
+    <div id="jobSearchModal" class="search-modal-backdrop" hidden>
+      <div class="search-modal-content">
+        <div class="modal-drag-handle"></div>
+
+        <div class="search-modal-header">
+          <h3 class="search-modal-title">เลือก JOB / โครงการ</h3>
+          <button type="button" id="closeSearchModal" class="btn-close-modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="search-modal-body">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="modalSearchInput" class="modal-search-input" placeholder="พิมพ์เลข JOB/SO หรือชื่อลูกค้าเพื่อค้นหา..." autocomplete="off">
+            <button type="button" id="clearSearchInput" class="btn-clear-search" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
-          <h2>ส่งแบบประเมินเรียบร้อยแล้ว!</h2>
-          <p>ลูกค้าทำแบบสอบถามและส่งข้อมูลแล้ว<br>ขอบคุณสำหรับการใช้งานระบบ</p>
-          <button class="btn-done">ส่งแบบประเมินเรียบร้อยแล้ว!</button>
+          <div id="modalJobList" class="modal-job-list">
+            <!-- รายการงานจะถูกสร้างขึ้นด้วย JS -->
+          </div>
         </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- ═══════════════════════════════
-     YEAR PICKER MODAL
-═══════════════════════════════ -->
-<div id="yearPickerModal" hidden>
-  <div class="year-picker-sheet">
-    <h3>เลือกปี</h3>
-    <div class="year-grid">
-      <button class="year-pick-btn active" data-year="all">ทุกปี</button>
-      <button class="year-pick-btn" data-year="2020">2020</button>
-      <button class="year-pick-btn" data-year="2021">2021</button>
-      <button class="year-pick-btn" data-year="2022">2022</button>
-      <button class="year-pick-btn" data-year="2023">2023</button>
-      <button class="year-pick-btn" data-year="2024">2024</button>
-      <button class="year-pick-btn" data-year="2025">2025</button>
-      <button class="year-pick-btn" data-year="2026">2026</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════
-     JOB SEARCH MODAL
-═══════════════════════════════ -->
-<div id="jobSearchModal">
-  <div class="modal-sheet">
-    <div class="modal-header">
-      <h3>เลือก JOB-Number</h3>
-      <button id="closeSearchModal">✕</button>
-    </div>
-    <div class="modal-search-wrap">
-      <input type="text" id="modalSearchInput" placeholder="ค้นหา JOB/SO หรือชื่อลูกค้า...">
-      <button id="clearSearchInput">✕</button>
-    </div>
-    <div id="modalJobList"></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════
-     CONFIRM QR MODAL
-═══════════════════════════════ -->
-<div id="confirm-qr-modal" hidden>
-  <div class="confirm-sheet">
-    <h3>ยืนยันการสร้าง QR Code</h3>
-    <div class="confirm-row"><span>พนักงาน</span><span id="confirm-emp-name">-</span></div>
-    <div class="confirm-row"><span>JOB-Number</span><span id="confirm-job-number">-</span></div>
-    <div class="confirm-row" style="border-bottom:none"><span>ลูกค้า/โครงการ</span><span id="confirm-customer">-</span></div>
-    <div class="confirm-btns">
-      <button id="confirm-qr-cancel">ยกเลิก</button>
-      <button id="confirm-qr-ok">สร้าง QR Code</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════
-     CUSTOM PROMPT MODAL
-═══════════════════════════════ -->
-<div id="custom-prompt-modal" hidden>
-  <div class="prompt-sheet">
-    <h3>กรอกชื่อลูกค้า/โครงการ</h3>
-    <p>ไม่พบชื่อลูกค้าในระบบ กรุณากรอกชื่อลูกค้าหรือชื่อโครงการ</p>
-    <input type="text" id="custom-prompt-input" placeholder="ชื่อลูกค้า / โครงการ">
-    <div class="prompt-btns">
-      <button id="custom-prompt-cancel">ยกเลิก</button>
-      <button id="custom-prompt-ok">ยืนยัน</button>
-    </div>
-  </div>
-</div>
-
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="/js/webview-helper.js"></script>
-<script>
-  // Show/hide manual job field when jobNumberInput is shown
-  const _origJobInput = document.getElementById('jobNumberInput');
-  const _manualField = document.getElementById('manualJobField');
-  const _jobSelectWrapper = document.getElementById('jobSelectWrapper');
-  // Watch display style changes on jobNumberInput
-  const _observer = new MutationObserver(() => {
-    if (_origJobInput && _manualField && _jobSelectWrapper) {
-      const shown = _origJobInput.style.display !== 'none';
-      _manualField.style.display = shown ? 'block' : 'none';
-      _jobSelectWrapper.style.display = shown ? 'none' : 'block';
-    }
-  });
-  if (_origJobInput) _observer.observe(_origJobInput, { attributes: true, attributeFilter: ['style'] });
-</script>
-<script src="/js/auth.js"></script>
-<script src="/js/qr-generator.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="/js/webview-helper.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/qr-generator.js?v=5"></script>
 
 </body>
 </html>
