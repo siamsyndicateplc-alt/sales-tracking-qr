@@ -72,6 +72,7 @@ app.use('/fonts', express.static(path.join(__dirname, 'public/fonts'), {
     maxAge: '1y',
     immutable: true
 }));
+app.get('/', (req, res) => res.redirect(302, '/qr-generator.html'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Mount API Routes
